@@ -60,8 +60,10 @@ const transcriptResponse = await fetch("https://api.assemblyai.com/v2/transcript
     audio_url: audioUrl,
   }),
 });
-
+console.log("[STEP 3.0] TRANSCRIPT HTTP STATUS", transcriptResponse.status);
 const transcriptData: any = await transcriptResponse.json();
+console.log("[STEP 3.05] AUDIO URL", audioUrl);
+console.log("[STEP 3.1] TRANSCRIPT RESPONSE", transcriptData);
 console.log("[STEP 3.1] TRANSCRIPT RESPONSE", transcriptData);
 const transcriptId = transcriptData.id;
 console.log("[STEP 3.15] TRANSCRIPT ID", transcriptId);
