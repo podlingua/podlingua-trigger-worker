@@ -1,10 +1,10 @@
 {
   "dependencies": {
     "@supabase/supabase-js": "^2.102.1",
-    "@trigger.dev/sdk": "^4.4.3"
+    "@trigger.dev/sdk": "4.4.4"
   },
   "devDependencies": {
-    "@trigger.dev/build": "^4.4.3",
+    "@trigger.dev/build": "4.4.4",
     "@types/node": "^25.5.2"
   }
 }
