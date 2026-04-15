@@ -61,17 +61,26 @@ const transcriptResponse = await fetch("https://api.assemblyai.com/v2/transcript
   }),
 });
 console.log("[STEP 3.0] TRANSCRIPT HTTP STATUS", transcriptResponse.status);
-const transcriptData: any = await transcriptResponse.json();
+
+const transcriptText = await transcriptResponse.text();
 console.log("[STEP 3.05] AUDIO URL", audioUrl);
-console.log("[STEP 3.1] TRANSCRIPT RESPONSE", transcriptData);
-console.log("[STEP 3.1] TRANSCRIPT RESPONSE", transcriptData);
-const transcriptId = transcriptData.id;
-console.log("[STEP 3.15] TRANSCRIPT ID", transcriptId);
-if (!transcriptId) {
-  throw new Error("No transcript ID returned");
+console.log("[STEP 3.1] TRANSCRIPT RAW RESPONSE", transcriptText);
+
+let transcriptData: any;
+try {
+  transcriptData = JSON.parse(transcriptText);
+} catch {
+  throw new Error(`AssemblyAI returned non-JSON: ${transcriptText}`);
 }
 
-let transcriptText = "";
+const transcriptId = transcriptData.id;
+console.log("[STEP 3.15] TRANSCRIPT ID", transcriptId);
+
+if (!transcriptId) {
+  throw new Error(`No transcript ID returned. Full response: ${transcriptText}`);
+}
+
+
 
 while (true) {
   await new Promise((r) => setTimeout(r, 3000));
@@ -95,7 +104,7 @@ if (pollData.status === "error") {
 }
 
   if (pollJson.status === "completed") {
-    transcriptText = pollJson.text;
+    
     break;
   }
 
