@@ -58,6 +58,7 @@ const transcriptResponse = await fetch("https://api.assemblyai.com/v2/transcript
   },
   body: JSON.stringify({
     audio_url: audioUrl,
+    speech_models: ["universal-3-pro"],
   }),
 });
 console.log("[STEP 3.0] TRANSCRIPT HTTP STATUS", transcriptResponse.status);
