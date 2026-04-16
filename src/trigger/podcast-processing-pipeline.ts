@@ -101,13 +101,12 @@ const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
 });
 
 const openaiJson = await openaiRes.json();
+console.log("[STEP 4.0] OPENAI RAW RESPONSE", JSON.stringify(openaiJson)); // 👈 add this
 const translationText = openaiJson.choices?.[0]?.message?.content?.trim();
 
 if (!translationText) {
   throw new Error("OpenAI returned empty translation");
 }
-
-console.log("[STEP 4.1] TRANSLATION DONE", translationText.length);
 
       // =========================
       // STEP 5: FINISH
