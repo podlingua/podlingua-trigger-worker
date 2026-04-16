@@ -58,13 +58,13 @@ const transcriptResponse = await fetch("https://api.assemblyai.com/v2/transcript
   },
   body: JSON.stringify({
     audio_url: audioUrl,
-    speech_models: ["universal-3-pro"],
+    speech_model: "best", // ✅ fixed field name
   }),
 });
+
 console.log("[STEP 3.0] TRANSCRIPT HTTP STATUS", transcriptResponse.status);
 
-const transcriptText = await transcriptResponse.text();
-console.log("[STEP 3.05] AUDIO URL", audioUrl);
+const transcriptText = await transcriptResponse.text(); // ✅ actually reads the response
 console.log("[STEP 3.1] TRANSCRIPT RAW RESPONSE", transcriptText);
 
 let transcriptData: any;
@@ -73,49 +73,6 @@ try {
 } catch {
   throw new Error(`AssemblyAI returned non-JSON: ${transcriptText}`);
 }
-
-const transcriptId = transcriptData.id;
-console.log("[STEP 3.15] TRANSCRIPT ID", transcriptId);
-
-if (!transcriptId) {
-  throw new Error(`No transcript ID returned. Full response: ${transcriptText}`);
-}
-
-
-
-while (true) {
-  await new Promise((r) => setTimeout(r, 3000));
-
- const pollResponse = await fetch(`https://api.assemblyai.com/v2/transcript/${transcriptId}`, {
-  headers: {
-    Authorization: ASSEMBLYAI_API_KEY,
-  },
-});
-const pollData: any = await pollResponse.json();
-const pollJson: any = await pollResponse.json();
-console.log("[STEP 3.2] POLL STATUS", pollJson.status);
-
-if (pollData.status === "completed") {
-  console.log("[STEP 3.3] TRANSCRIPTION DONE");
-  break;
-}
-
-if (pollData.status === "error") {
-  throw new Error(`AssemblyAI failed: ${pollData.error}`);
-}
-
-  if (pollJson.status === "completed") {
-    
-    break;
-  }
-
-  if (pollJson.status === "error") {
-    throw new Error(`AssemblyAI failed: ${pollJson.error}`);
-  }
-}
-
-console.log("[STEP 3.3] TRANSCRIPTION DONE", transcriptText.length);
-
       // =========================
       // STEP 4: TRANSLATION
       // =========================
