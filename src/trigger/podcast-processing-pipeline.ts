@@ -5,9 +5,11 @@ export const podcastOrchestrator = task({
   run: async (payload: any) => {
     const ASSEMBLYAI_API_KEY = process.env.ASSEMBLYAI_API_KEY!;
     const OPENAI_API_KEY = process.env.OPENAI_API_KEY!;
+    const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY!;
 
     if (!ASSEMBLYAI_API_KEY) throw new Error("Missing ASSEMBLYAI_API_KEY");
     if (!OPENAI_API_KEY) throw new Error("Missing OPENAI_API_KEY");
+    if (!ELEVENLABS_API_KEY) throw new Error("Missing ELEVENLABS_API_KEY");
 
     console.log("[STEP 1] ROOT TASK ENTERED", payload);
     console.log("[STEP 2] SUBMITTING AUDIO");
@@ -40,62 +42,4 @@ export const podcastOrchestrator = task({
     while (true) {
       await new Promise((r) => setTimeout(r, 3000));
 
-      const pollResponse = await fetch(`https://api.assemblyai.com/v2/transcript/${transcriptId}`, {
-        headers: { Authorization: ASSEMBLYAI_API_KEY },
-      });
-
-      const pollJson: any = await pollResponse.json();
-      console.log("[STEP 3.1] POLL STATUS", pollJson.status);
-
-      if (pollJson.status === "completed") {
-        transcriptText = pollJson.text;
-        console.log("[STEP 3.2] TRANSCRIPT DONE, LENGTH:", transcriptText.length);
-        break;
-      }
-
-      if (pollJson.status === "error") {
-        throw new Error(`AssemblyAI transcription error: ${pollJson.error}`);
-      }
-    }
-
-    console.log("[STEP 4] TRANSLATING");
-
-    const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${OPENAI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: "gpt-4o",
-        messages: [
-          {
-            role: "system",
-            content: "You are a professional translator. Return only the translated text.",
-          },
-          {
-            role: "user",
-            content: `Translate this into ${payload.targetLanguage || "Spanish"}:\n\n${transcriptText}`,
-          },
-        ],
-        temperature: 0.2,
-      }),
-    });
-
-    const openaiJson = await openaiRes.json();
-    console.log("[STEP 4.1] OPENAI RESPONSE", JSON.stringify(openaiJson));
-
-    const translationText = openaiJson.choices?.[0]?.message?.content?.trim();
-    if (!translationText) {
-      throw new Error(`OpenAI returned empty translation. Full response: ${JSON.stringify(openaiJson)}`);
-    }
-
-    console.log("[STEP 4.2] TRANSLATION DONE, LENGTH:", translationText.length);
-    console.log("[STEP 5] PIPELINE COMPLETE");
-
-    return {
-      transcript: transcriptText,
-      translation: translationText,
-    };
-  },
-});
+      const pollResponse = await fetch(`https://api.assemblyai.com/v2/transcript/$
