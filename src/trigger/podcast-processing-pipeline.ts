@@ -22,7 +22,7 @@ export const podcastOrchestrator = task({
       },
       body: JSON.stringify({
         audio_url: audioUrl,
-        speech_model: "best",
+        speech_models: ["best"],
       }),
     });
 
