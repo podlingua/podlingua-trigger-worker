@@ -10,8 +10,8 @@ export const podcastOrchestrator = task({
     if (!OPENAI_API_KEY) throw new Error("Missing OPENAI_API_KEY");
 
     console.log("[STEP 1] ROOT TASK ENTERED", payload);
-
     console.log("[STEP 2] SUBMITTING AUDIO");
+
     const audioUrl = payload.audioUrl || "https://storage.googleapis.com/aai-docs-samples/espn.m4a";
 
     const submitResponse = await fetch("https://api.assemblyai.com/v2/transcript", {
@@ -22,7 +22,7 @@ export const podcastOrchestrator = task({
       },
       body: JSON.stringify({
         audio_url: audioUrl,
-        speech_models: ["best"],
+        speech_models: ["universal-2"],
       }),
     });
 
