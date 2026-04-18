@@ -5,11 +5,11 @@ export const podcastOrchestrator = task({
   run: async (payload: any) => {
     const ASSEMBLYAI_API_KEY = process.env.ASSEMBLYAI_API_KEY!;
     const OPENAI_API_KEY = process.env.OPENAI_API_KEY!;
-    const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY!;
+    const ELEVENLABS_API_KEY = process.env.ELEVENLAB_API_KEY!;
 
     if (!ASSEMBLYAI_API_KEY) throw new Error("Missing ASSEMBLYAI_API_KEY");
     if (!OPENAI_API_KEY) throw new Error("Missing OPENAI_API_KEY");
-    if (!ELEVENLABS_API_KEY) throw new Error("Missing ELEVENLABS_API_KEY");
+    if (!ELEVENLABS_API_KEY) throw new Error("Missing ELEVENLAB_API_KEY");
 
     console.log("[STEP 1] ROOT TASK ENTERED", payload);
     console.log("[STEP 2] SUBMITTING AUDIO");
