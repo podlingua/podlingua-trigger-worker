@@ -128,6 +128,9 @@ export const podcastOrchestrator = task({
     console.log("[STEP 5.1] DUBBED AUDIO GENERATED, SIZE:", audioArrayBuffer.byteLength);
 
     console.log("[STEP 6] UPLOADING TO SUPABASE");
+    console.log("[STEP 6] SUPABASE_URL:", SUPABASE_URL);
+    console.log("[STEP 6] BUCKET:", BUCKET);
+    console.log("[STEP 6] KEY LENGTH:", SUPABASE_KEY?.length);
 
     const fileName = `jobs/${payload.episodeId || "test"}/final/dubbed_${Date.now()}.mp3`;
 
