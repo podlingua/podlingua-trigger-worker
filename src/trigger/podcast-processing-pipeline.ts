@@ -6,10 +6,16 @@ export const podcastOrchestrator = task({
     const ASSEMBLYAI_API_KEY = process.env.ASSEMBLYAI_API_KEY!;
     const OPENAI_API_KEY = process.env.OPENAI_API_KEY!;
     const ELEVENLABS_API_KEY = process.env.ELEVENLAB_API_KEY!;
+    const SUPABASE_URL = process.env.SUPABASE_URL!;
+    const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+    const BUCKET = process.env.SUPABASE_BUCKET_NAME!;
 
     if (!ASSEMBLYAI_API_KEY) throw new Error("Missing ASSEMBLYAI_API_KEY");
     if (!OPENAI_API_KEY) throw new Error("Missing OPENAI_API_KEY");
     if (!ELEVENLABS_API_KEY) throw new Error("Missing ELEVENLAB_API_KEY");
+    if (!SUPABASE_URL) throw new Error("Missing SUPABASE_URL");
+    if (!SUPABASE_KEY) throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY");
+    if (!BUCKET) throw new Error("Missing SUPABASE_BUCKET_NAME");
 
     console.log("[STEP 1] ROOT TASK ENTERED", payload);
     console.log("[STEP 2] SUBMITTING AUDIO");
@@ -92,6 +98,7 @@ export const podcastOrchestrator = task({
     }
 
     console.log("[STEP 4.2] TRANSLATION DONE, LENGTH:", translationText.length);
+
     console.log("[STEP 5] GENERATING DUBBED AUDIO");
 
     const elevenRes = await fetch(
@@ -119,15 +126,38 @@ export const podcastOrchestrator = task({
     }
 
     const audioArrayBuffer = await elevenRes.arrayBuffer();
-    const audioBase64 = Buffer.from(audioArrayBuffer).toString("base64");
-
     console.log("[STEP 5.1] DUBBED AUDIO GENERATED, SIZE:", audioArrayBuffer.byteLength);
-    console.log("[STEP 5] PIPELINE COMPLETE");
+
+    // STEP 6: UPLOAD TO SUPABASE
+    console.log("[STEP 6] UPLOADING TO SUPABASE");
+
+    const fileName = `dubbed_${Date.now()}.mp3`;
+    const uploadResponse = await fetch(
+      `${SUPABASE_URL}/storage/v1/object/${BUCKET}/${fileName}`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+          "Content-Type": "audio/mpeg",
+        },
+        body: audioArrayBuffer,
+      }
+    );
+
+    if (!uploadResponse.ok) {
+      const errorText = await uploadResponse.text();
+      throw new Error(`Supabase upload error: ${errorText}`);
+    }
+
+    const finalAudioUrl = `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${fileName}`;
+    console.log("[STEP 6.1] UPLOADED TO SUPABASE:", finalAudioUrl);
+
+    console.log("[STEP 7] PIPELINE COMPLETE");
 
     return {
       transcript: transcriptText,
       translation: translationText,
-      dubbedAudioBase64: audioBase64,
+      final_audio_url: finalAudioUrl,
     };
   },
 });
