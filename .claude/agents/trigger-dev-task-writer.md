@@ -1,6 +1,16 @@
 import { task } from "@trigger.dev/sdk/v3";
 import { createClient } from "@supabase/supabase-js";
 
+const VOICE_MAP: Record<string, string> = {
+  "Spanish": "jsCqWAovK2LkecY7zXl4",
+  "French": "4vt9RHFsogNVpGEqOyS2",
+  "Portuguese": "AZnzlk1XvdvUeBnXmlld",
+  "German": "flq6f7UD9hBuBbz2F1Yp",
+  "Italian": "MF3mGyEYCl7XYWbV9V6O",
+  "Japanese": "XB0fDUnXU5powFXDhCwa",
+  "default": "21m00Tcm4TlvDq8ikWAM",
+};
+
 export const podcastOrchestrator = task({
   id: "podcast-orchestrator",
   run: async (payload: any) => {
@@ -24,6 +34,10 @@ export const podcastOrchestrator = task({
     console.log("[STEP 2] SUBMITTING AUDIO");
 
     const audioUrl = payload.audioUrl || "https://storage.googleapis.com/aai-docs-samples/espn.m4a";
+    const targetLanguage = payload.targetLanguage || "Spanish";
+    const voiceId = VOICE_MAP[targetLanguage] || VOICE_MAP["default"];
+
+    console.log("[STEP 2] TARGET LANGUAGE:", targetLanguage, "VOICE ID:", voiceId);
 
     const submitResponse = await fetch("https://api.assemblyai.com/v2/transcript", {
       method: "POST",
@@ -87,7 +101,7 @@ export const podcastOrchestrator = task({
           },
           {
             role: "user",
-            content: `Translate this into ${payload.targetLanguage || "Spanish"}:\n\n${transcriptText}`,
+            content: `Translate this into ${targetLanguage}:\n\n${transcriptText}`,
           },
         ],
         temperature: 0.2,
@@ -101,10 +115,10 @@ export const podcastOrchestrator = task({
     }
 
     console.log("[STEP 4.2] TRANSLATION DONE, LENGTH:", translationText.length);
-    console.log("[STEP 5] GENERATING DUBBED AUDIO");
+    console.log("[STEP 5] GENERATING DUBBED AUDIO WITH VOICE:", voiceId);
 
     const elevenRes = await fetch(
-      "https://api.elevenlabs.io/v1/text-to-speech/21m00Tcm4TlvDq8ikWAM",
+      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
       {
         method: "POST",
         headers: {
