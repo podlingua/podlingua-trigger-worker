@@ -8,6 +8,7 @@ export const podcastOrchestrator = task({
     const ELEVENLABS_API_KEY = process.env.ELEVENLAB_API_KEY!;
     const SUPABASE_URL = process.env.SUPABASE_URL!;
     const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+    const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY!;
     const BUCKET = process.env.SUPABASE_BUCKET_NAME!;
 
     if (!ASSEMBLYAI_API_KEY) throw new Error("Missing ASSEMBLYAI_API_KEY");
@@ -15,6 +16,7 @@ export const podcastOrchestrator = task({
     if (!ELEVENLABS_API_KEY) throw new Error("Missing ELEVENLAB_API_KEY");
     if (!SUPABASE_URL) throw new Error("Missing SUPABASE_URL");
     if (!SUPABASE_KEY) throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY");
+    if (!SUPABASE_ANON_KEY) throw new Error("Missing SUPABASE_ANON_KEY");
     if (!BUCKET) throw new Error("Missing SUPABASE_BUCKET_NAME");
 
     console.log("[STEP 1] ROOT TASK ENTERED", payload);
@@ -128,18 +130,16 @@ export const podcastOrchestrator = task({
     console.log("[STEP 5.1] DUBBED AUDIO GENERATED, SIZE:", audioArrayBuffer.byteLength);
 
     console.log("[STEP 6] UPLOADING TO SUPABASE");
-    console.log("[STEP 6] SUPABASE_URL:", SUPABASE_URL);
-    console.log("[STEP 6] BUCKET:", BUCKET);
-    console.log("[STEP 6] KEY LENGTH:", SUPABASE_KEY?.length);
 
     const fileName = `jobs/${payload.episodeId || "test"}/final/dubbed_${Date.now()}.mp3`;
 
     const uploadResponse = await fetch(
-      `${SUPABASE_URL}/storage/v1/object/${BUCKET}/${fileName}?apikey=${SUPABASE_KEY}`,
+      `${SUPABASE_URL}/storage/v1/object/${BUCKET}/${fileName}`,
       {
         method: "POST",
         headers: {
           Authorization: `Bearer ${SUPABASE_KEY}`,
+          apikey: SUPABASE_ANON_KEY,
           "Content-Type": "audio/mpeg",
         },
         body: audioArrayBuffer,
