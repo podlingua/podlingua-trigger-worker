@@ -132,12 +132,11 @@ export const podcastOrchestrator = task({
     const fileName = `jobs/${payload.episodeId || "test"}/final/dubbed_${Date.now()}.mp3`;
 
     const uploadResponse = await fetch(
-      `${SUPABASE_URL}/storage/v1/object/${BUCKET}/${fileName}`,
+      `${SUPABASE_URL}/storage/v1/object/${BUCKET}/${fileName}?apikey=${SUPABASE_KEY}`,
       {
         method: "POST",
         headers: {
           Authorization: `Bearer ${SUPABASE_KEY}`,
-          apikey: SUPABASE_KEY,
           "Content-Type": "audio/mpeg",
         },
         body: audioArrayBuffer,
