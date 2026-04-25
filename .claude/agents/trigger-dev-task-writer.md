@@ -2,13 +2,8 @@ import { task } from "@trigger.dev/sdk/v3";
 import { createClient } from "@supabase/supabase-js";
 
 const VOICE_MAP: Record<string, string> = {
-  "Spanish": "jsCqWAovK2LkecY7zXl4",
-  "French": "4vt9RHFsogNVpGEqOyS2",
-  "Portuguese": "AZnzlk1XvdvUeBnXmlld",
-  "German": "flq6f7UD9hBuBbz2F1Yp",
-  "Italian": "MF3mGyEYCl7XYWbV9V6O",
-  "Japanese": "XB0fDUnXU5powFXDhCwa",
-  "default": "21m00Tcm4TlvDq8ikWAM",
+  "Spanish": "haaEg4BqiAAwDT7ahTxl",
+  "default": "haaEg4BqiAAwDT7ahTxl",
 };
 
 export const podcastOrchestrator = task({
