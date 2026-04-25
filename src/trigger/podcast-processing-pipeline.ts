@@ -102,7 +102,7 @@ export const podcastOrchestrator = task({
     console.log("[STEP 5] GENERATING DUBBED AUDIO");
 
     const elevenRes = await fetch(
-      "https://api.elevenlabs.io/v1/text-to-speech/21m00Tcm4TlvDq8ikWAM",
+      "https://api.elevenlabs.io/v1/text-to-speech/haaEg4BqiAAwDT7ahTxl",
       {
         method: "POST",
         headers: {
