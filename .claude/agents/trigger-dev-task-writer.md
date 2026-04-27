@@ -7,26 +7,6 @@ const VOICE_MAP: Record<string, string> = {
   "default": "haaEg4BqiAAwDT7ahTxl",
 };
 
-async function translateChunk(text: string, targetLanguage: string, apiKey: string): Promise<string> {
-  const res = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: "gpt-4o",
-      messages: [
-        { role: "system", content: "You are a professional translator. Return only the translated text." },
-        { role: "user", content: `Translate this into ${targetLanguage}:\n\n${text}` },
-      ],
-      temperature: 0.2,
-    }),
-  });
-  const json = await res.json();
-  return json.choices?.[0]?.message?.content?.trim() || "";
-}
-
 function splitIntoChunks(text: string, maxChars: number): string[] {
   const chunks = [];
   let start = 0;
@@ -40,6 +20,52 @@ function splitIntoChunks(text: string, maxChars: number): string[] {
     start = end;
   }
   return chunks;
+}
+
+async function translateChunk(text: string, targetLanguage: string, apiKey: string): Promise<string> {
+  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + apiKey,
+    },
+    body: JSON.stringify({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: "You are a professional translator. Return only the translated text." },
+        { role: "user", content: "Translate this into " + targetLanguage + ":\n\n" + text },
+      ],
+      temperature: 0.2,
+    }),
+  });
+  const json = await res.json();
+  if (!json.choices?.[0]?.message?.content) {
+    throw new Error("OpenAI chunk translation failed: " + JSON.stringify(json));
+  }
+  return json.choices[0].message.content.trim();
+}
+
+async function dubChunk(text: string, voiceId: string, apiKey: string): Promise<ArrayBuffer> {
+  const res = await fetch(
+    "https://api.elevenlabs.io/v1/text-to-speech/" + voiceId,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "xi-api-key": apiKey,
+      },
+      body: JSON.stringify({
+        text,
+        model_id: "eleven_multilingual_v2",
+        voice_settings: { stability: 0.3, similarity_boost: 0.85 },
+      }),
+    }
+  );
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error("ElevenLabs error: " + errorText);
+  }
+  return res.arrayBuffer();
 }
 
 export const podcastOrchestrator = task({
@@ -62,13 +88,12 @@ export const podcastOrchestrator = task({
     const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
     console.log("[STEP 1] ROOT TASK ENTERED", payload);
-    console.log("[STEP 2] SUBMITTING AUDIO");
 
     const audioUrl = payload.audioUrl || "https://storage.googleapis.com/aai-docs-samples/espn.m4a";
     const targetLanguage = payload.targetLanguage || "Spanish";
     const voiceId = VOICE_MAP[targetLanguage] || VOICE_MAP["default"];
 
-    console.log("[STEP 2] TARGET LANGUAGE:", targetLanguage, "VOICE ID:", voiceId);
+    console.log("[STEP 2] SUBMITTING AUDIO, TARGET:", targetLanguage, "VOICE:", voiceId);
 
     const submitResponse = await fetch("https://api.assemblyai.com/v2/transcript", {
       method: "POST",
@@ -83,8 +108,6 @@ export const podcastOrchestrator = task({
     });
 
     const submitJson = await submitResponse.json();
-    console.log("[STEP 2.1] ASSEMBLYAI SUBMIT RESPONSE", JSON.stringify(submitJson));
-
     const transcriptId = submitJson.id;
     if (!transcriptId) {
       throw new Error("No transcript ID returned: " + JSON.stringify(submitJson));
@@ -95,77 +118,63 @@ export const podcastOrchestrator = task({
 
     while (true) {
       await new Promise((r) => setTimeout(r, 3000));
-
       const pollResponse = await fetch(
         "https://api.assemblyai.com/v2/transcript/" + transcriptId,
         { headers: { Authorization: ASSEMBLYAI_API_KEY } }
       );
-
       const pollJson: any = await pollResponse.json();
       console.log("[STEP 3.1] POLL STATUS", pollJson.status);
-
       if (pollJson.status === "completed") {
         transcriptText = pollJson.text;
         console.log("[STEP 3.2] TRANSCRIPT DONE, LENGTH:", transcriptText.length);
         break;
       }
-
       if (pollJson.status === "error") {
-        throw new Error("AssemblyAI transcription error: " + pollJson.error);
+        throw new Error("AssemblyAI error: " + pollJson.error);
       }
     }
 
     console.log("[STEP 4] TRANSLATING IN CHUNKS");
-    const chunks = splitIntoChunks(transcriptText, 3000);
-    console.log("[STEP 4.1] TOTAL CHUNKS:", chunks.length);
+    const translateChunks = splitIntoChunks(transcriptText, 2000);
+    console.log("[STEP 4.1] TRANSLATION CHUNKS:", translateChunks.length);
 
-    const translatedChunks: string[] = [];
-    for (let i = 0; i < chunks.length; i++) {
-      console.log("[STEP 4.2] TRANSLATING CHUNK " + (i + 1) + "/" + chunks.length);
-      const translated = await translateChunk(chunks[i], targetLanguage, OPENAI_API_KEY);
-      translatedChunks.push(translated);
-      await new Promise((r) => setTimeout(r, 1000));
+    const translatedParts: string[] = [];
+    for (let i = 0; i < translateChunks.length; i++) {
+      console.log("[STEP 4.2] TRANSLATING CHUNK " + (i + 1) + "/" + translateChunks.length);
+      const translated = await translateChunk(translateChunks[i], targetLanguage, OPENAI_API_KEY);
+      translatedParts.push(translated);
+      await new Promise((r) => setTimeout(r, 500));
     }
-
-    const translationText = translatedChunks.join(" ");
+    const translationText = translatedParts.join(" ");
     console.log("[STEP 4.3] TRANSLATION DONE, LENGTH:", translationText.length);
 
-    console.log("[STEP 5] GENERATING DUBBED AUDIO WITH VOICE:", voiceId);
+    console.log("[STEP 5] DUBBING IN CHUNKS");
+    const dubChunks = splitIntoChunks(translationText, 5000);
+    console.log("[STEP 5.1] DUB CHUNKS:", dubChunks.length);
 
-    const elevenRes = await fetch(
-      "https://api.elevenlabs.io/v1/text-to-speech/" + voiceId,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "xi-api-key": ELEVENLABS_API_KEY,
-        },
-        body: JSON.stringify({
-          text: translationText,
-          model_id: "eleven_multilingual_v2",
-          voice_settings: {
-            stability: 0.3,
-            similarity_boost: 0.85,
-          },
-        }),
-      }
-    );
-
-    if (!elevenRes.ok) {
-      const errorText = await elevenRes.text();
-      throw new Error("ElevenLabs error: " + errorText);
+    const audioBuffers: ArrayBuffer[] = [];
+    for (let i = 0; i < dubChunks.length; i++) {
+      console.log("[STEP 5.2] DUBBING CHUNK " + (i + 1) + "/" + dubChunks.length);
+      const buf = await dubChunk(dubChunks[i], voiceId, ELEVENLABS_API_KEY);
+      audioBuffers.push(buf);
+      await new Promise((r) => setTimeout(r, 500));
     }
 
-    const audioArrayBuffer = await elevenRes.arrayBuffer();
-    console.log("[STEP 5.1] DUBBED AUDIO GENERATED, SIZE:", audioArrayBuffer.byteLength);
+    const totalLength = audioBuffers.reduce((sum, buf) => sum + buf.byteLength, 0);
+    const merged = new Uint8Array(totalLength);
+    let offset = 0;
+    for (const buf of audioBuffers) {
+      merged.set(new Uint8Array(buf), offset);
+      offset += buf.byteLength;
+    }
+    console.log("[STEP 5.3] AUDIO MERGED, SIZE:", totalLength);
 
     console.log("[STEP 6] UPLOADING TO SUPABASE");
-
     const fileName = "jobs/" + (payload.episodeId || "test") + "/final/dubbed_" + Date.now() + ".mp3";
 
     const { error: uploadError } = await supabase.storage
       .from(BUCKET)
-      .upload(fileName, audioArrayBuffer, {
+      .upload(fileName, merged, {
         contentType: "audio/mpeg",
         upsert: true,
       });
@@ -174,12 +183,9 @@ export const podcastOrchestrator = task({
       throw new Error("Supabase upload error: " + uploadError.message);
     }
 
-    const { data: publicData } = supabase.storage
-      .from(BUCKET)
-      .getPublicUrl(fileName);
-
+    const { data: publicData } = supabase.storage.from(BUCKET).getPublicUrl(fileName);
     const finalAudioUrl = publicData.publicUrl;
-    console.log("[STEP 6.1] UPLOADED TO SUPABASE:", finalAudioUrl);
+    console.log("[STEP 6.1] UPLOADED:", finalAudioUrl);
     console.log("[STEP 7] PIPELINE COMPLETE");
 
     return {
