@@ -1,3 +1,4 @@
+cat > src/trigger/podcast-processing-pipeline.ts << 'ENDOFFILE'
 import { task } from "@trigger.dev/sdk/v3";
 import { createClient } from "@supabase/supabase-js";
 
@@ -16,19 +17,12 @@ async function translateChunk(text: string, targetLanguage: string, apiKey: stri
     body: JSON.stringify({
       model: "gpt-4o",
       messages: [
-        {
-          role: "system",
-          content: "You are a professional translator. Return only the translated text.",
-        },
-        {
-          role: "user",
-          content: `Translate this into ${targetLanguage}:\n\n${text}`,
-        },
+        { role: "system", content: "You are a professional translator. Return only the translated text." },
+        { role: "user", content: `Translate this into ${targetLanguage}:\n\n${text}` },
       ],
       temperature: 0.2,
     }),
   });
-
   const json = await res.json();
   return json.choices?.[0]?.message?.content?.trim() || "";
 }
@@ -93,7 +87,7 @@ export const podcastOrchestrator = task({
 
     const transcriptId = submitJson.id;
     if (!transcriptId) {
-      throw new Error(`No transcript ID returned: ${JSON.stringify(submitJson)}`);
+      throw new Error("No transcript ID returned: " + JSON.stringify(submitJson));
     }
 
     console.log("[STEP 3] POLLING FOR TRANSCRIPT", transcriptId);
@@ -103,7 +97,7 @@ export const podcastOrchestrator = task({
       await new Promise((r) => setTimeout(r, 3000));
 
       const pollResponse = await fetch(
-        `https://api.assemblyai.com/v2/transcript/${transcriptId}`,
+        "https://api.assemblyai.com/v2/transcript/" + transcriptId,
         { headers: { Authorization: ASSEMBLYAI_API_KEY } }
       );
 
@@ -117,21 +111,20 @@ export const podcastOrchestrator = task({
       }
 
       if (pollJson.status === "error") {
-        throw new Error(`AssemblyAI transcription error: ${pollJson.error}`);
+        throw new Error("AssemblyAI transcription error: " + pollJson.error);
       }
     }
 
     console.log("[STEP 4] TRANSLATING IN CHUNKS");
-
     const chunks = splitIntoChunks(transcriptText, 3000);
     console.log("[STEP 4.1] TOTAL CHUNKS:", chunks.length);
 
     const translatedChunks: string[] = [];
     for (let i = 0; i < chunks.length; i++) {
-      console.log(`[STEP 4.2] TRANSLATING CHUNK ${i + 1}/${chunks.length}`);
+      console.log("[STEP 4.2] TRANSLATING CHUNK " + (i + 1) + "/" + chunks.length);
       const translated = await translateChunk(chunks[i], targetLanguage, OPENAI_API_KEY);
       translatedChunks.push(translated);
-      await new Promise((r) => setTimeout(r, 1000)); // avoid rate limits
+      await new Promise((r) => setTimeout(r, 1000));
     }
 
     const translationText = translatedChunks.join(" ");
@@ -140,7 +133,7 @@ export const podcastOrchestrator = task({
     console.log("[STEP 5] GENERATING DUBBED AUDIO WITH VOICE:", voiceId);
 
     const elevenRes = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
+      "https://api.elevenlabs.io/v1/text-to-speech/" + voiceId,
       {
         method: "POST",
         headers: {
@@ -160,7 +153,7 @@ export const podcastOrchestrator = task({
 
     if (!elevenRes.ok) {
       const errorText = await elevenRes.text();
-      throw new Error(`ElevenLabs error: ${errorText}`);
+      throw new Error("ElevenLabs error: " + errorText);
     }
 
     const audioArrayBuffer = await elevenRes.arrayBuffer();
@@ -168,7 +161,7 @@ export const podcastOrchestrator = task({
 
     console.log("[STEP 6] UPLOADING TO SUPABASE");
 
-    const fileName = `jobs/${payload.episodeId || "test"}/final/dubbed_${Date.now()}.mp3`;
+    const fileName = "jobs/" + (payload.episodeId || "test") + "/final/dubbed_" + Date.now() + ".mp3";
 
     const { error: uploadError } = await supabase.storage
       .from(BUCKET)
@@ -178,7 +171,7 @@ export const podcastOrchestrator = task({
       });
 
     if (uploadError) {
-      throw new Error(`Supabase upload error: ${uploadError.message}`);
+      throw new Error("Supabase upload error: " + uploadError.message);
     }
 
     const { data: publicData } = supabase.storage
@@ -196,3 +189,4 @@ export const podcastOrchestrator = task({
     };
   },
 });
+ENDOFFILE
