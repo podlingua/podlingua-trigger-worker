@@ -69,6 +69,7 @@ async function dubChunk(text: string, voiceId: string, apiKey: string): Promise<
 
 export const podcastOrchestrator = task({
   id: "podcast-orchestrator",
+  machine: "medium-1x",
   run: async (payload: any) => {
     const ASSEMBLYAI_API_KEY = process.env.ASSEMBLYAI_API_KEY!;
     const OPENAI_API_KEY = process.env.OPENAI_API_KEY!;
