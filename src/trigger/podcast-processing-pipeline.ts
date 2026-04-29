@@ -148,50 +148,43 @@ export const podcastOrchestrator = task({
     const translationText = translatedParts.join(" ");
     console.log("[STEP 4.3] TRANSLATION DONE, LENGTH:", translationText.length);
 
-    console.log("[STEP 5] DUBBING IN CHUNKS");
+    console.log("[STEP 5] DUBBING AND UPLOADING CHUNKS");
     const dubChunks = splitIntoChunks(translationText, 5000);
     console.log("[STEP 5.1] DUB CHUNKS:", dubChunks.length);
 
-    const audioBuffers: ArrayBuffer[] = [];
+    const chunkUrls: string[] = [];
     for (let i = 0; i < dubChunks.length; i++) {
       console.log("[STEP 5.2] DUBBING CHUNK " + (i + 1) + "/" + dubChunks.length);
       const buf = await dubChunk(dubChunks[i], voiceId, ELEVENLABS_API_KEY);
-      audioBuffers.push(buf);
+
+      const chunkFileName = "jobs/" + (payload.episodeId || "test") + "/chunks/chunk_" + i + "_" + Date.now() + ".mp3";
+      const { error: chunkUploadError } = await supabase.storage
+        .from(BUCKET)
+        .upload(chunkFileName, new Uint8Array(buf), {
+          contentType: "audio/mpeg",
+          upsert: true,
+        });
+
+      if (chunkUploadError) {
+        throw new Error("Supabase chunk upload error: " + chunkUploadError.message);
+      }
+
+      const { data: chunkPublicData } = supabase.storage.from(BUCKET).getPublicUrl(chunkFileName);
+      chunkUrls.push(chunkPublicData.publicUrl);
+      console.log("[STEP 5.3] CHUNK " + (i + 1) + " UPLOADED");
+
       await new Promise((r) => setTimeout(r, 500));
     }
 
-    const totalLength = audioBuffers.reduce((sum, buf) => sum + buf.byteLength, 0);
-    const merged = new Uint8Array(totalLength);
-    let offset = 0;
-    for (const buf of audioBuffers) {
-      merged.set(new Uint8Array(buf), offset);
-      offset += buf.byteLength;
-    }
-    console.log("[STEP 5.3] AUDIO MERGED, SIZE:", totalLength);
-
-    console.log("[STEP 6] UPLOADING TO SUPABASE");
-    const fileName = "jobs/" + (payload.episodeId || "test") + "/final/dubbed_" + Date.now() + ".mp3";
-
-    const { error: uploadError } = await supabase.storage
-      .from(BUCKET)
-      .upload(fileName, merged, {
-        contentType: "audio/mpeg",
-        upsert: true,
-      });
-
-    if (uploadError) {
-      throw new Error("Supabase upload error: " + uploadError.message);
-    }
-
-    const { data: publicData } = supabase.storage.from(BUCKET).getPublicUrl(fileName);
-    const finalAudioUrl = publicData.publicUrl;
-    console.log("[STEP 6.1] UPLOADED:", finalAudioUrl);
+    console.log("[STEP 6] ALL CHUNKS UPLOADED, TOTAL:", chunkUrls.length);
     console.log("[STEP 7] PIPELINE COMPLETE");
 
+    // Return first chunk as main audio, all chunks for playlist
     return {
       transcript: transcriptText,
       translation: translationText,
-      final_audio_url: finalAudioUrl,
+      final_audio_url: chunkUrls[0],
+      audio_chunks: chunkUrls,
     };
   },
 });
