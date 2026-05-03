@@ -92,8 +92,9 @@ export const podcastOrchestrator = task({
     const audioUrl = payload.audioUrl || "https://storage.googleapis.com/aai-docs-samples/espn.m4a";
     const targetLanguage = payload.targetLanguage || "Spanish";
     const voiceId = VOICE_MAP[targetLanguage] || VOICE_MAP["default"];
+    const previewMode = payload.previewMode === true;
 
-    console.log("[STEP 2] SUBMITTING AUDIO, TARGET:", targetLanguage, "VOICE:", voiceId);
+    console.log("[STEP 2] SUBMITTING AUDIO, TARGET:", targetLanguage, "VOICE:", voiceId, "PREVIEW:", previewMode);
 
     const submitResponse = await fetch("https://api.assemblyai.com/v2/transcript", {
       method: "POST",
@@ -126,6 +127,12 @@ export const podcastOrchestrator = task({
       console.log("[STEP 3.1] POLL STATUS", pollJson.status);
       if (pollJson.status === "completed") {
         transcriptText = pollJson.text;
+        // If preview/trial mode, cap to first 3 minutes of audio (approx 450 words)
+        if (previewMode) {
+          const words = transcriptText.split(" ");
+          transcriptText = words.slice(0, 450).join(" ");
+          console.log("[STEP 3.2] PREVIEW MODE — trimmed to 450 words (~3 min)");
+        }
         console.log("[STEP 3.2] TRANSCRIPT DONE, LENGTH:", transcriptText.length);
         break;
       }
