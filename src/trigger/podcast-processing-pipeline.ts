@@ -96,16 +96,23 @@ export const podcastOrchestrator = task({
 
     console.log("[STEP 2] SUBMITTING AUDIO, TARGET:", targetLanguage, "VOICE:", voiceId, "PREVIEW:", previewMode);
 
+    const transcriptBody: any = {
+      audio_url: audioUrl,
+      speech_models: ["universal-2"],
+    };
+
+    if (previewMode) {
+      transcriptBody.audio_end_at = 180000;
+      console.log("[STEP 2] PREVIEW MODE - limiting to first 3 minutes");
+    }
+
     const submitResponse = await fetch("https://api.assemblyai.com/v2/transcript", {
       method: "POST",
       headers: {
         Authorization: ASSEMBLYAI_API_KEY,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        audio_url: audioUrl,
-        speech_models: ["universal-2"],
-      }),
+      body: JSON.stringify(transcriptBody),
     });
 
     const submitJson = await submitResponse.json();
@@ -127,12 +134,6 @@ export const podcastOrchestrator = task({
       console.log("[STEP 3.1] POLL STATUS", pollJson.status);
       if (pollJson.status === "completed") {
         transcriptText = pollJson.text;
-        // If preview/trial mode, cap to first 3 minutes of audio (approx 450 words)
-        if (previewMode) {
-          const words = transcriptText.split(" ");
-          transcriptText = words.slice(0, 450).join(" ");
-          console.log("[STEP 3.2] PREVIEW MODE — trimmed to 450 words (~3 min)");
-        }
         console.log("[STEP 3.2] TRANSCRIPT DONE, LENGTH:", transcriptText.length);
         break;
       }
@@ -186,7 +187,6 @@ export const podcastOrchestrator = task({
     console.log("[STEP 6] ALL CHUNKS UPLOADED, TOTAL:", chunkUrls.length);
     console.log("[STEP 7] PIPELINE COMPLETE");
 
-    // Return first chunk as main audio, all chunks for playlist
     return {
       transcript: transcriptText,
       translation: translationText,
