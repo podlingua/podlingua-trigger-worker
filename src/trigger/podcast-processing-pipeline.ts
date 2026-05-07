@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 
 const VOICE_MAP: Record<string, string> = {
   "Spanish": "haaEg4BqiAAwDT7ahTxl",
+  "French": "mVjOqyqTPfwlXPjV5sjX",
   "default": "haaEg4BqiAAwDT7ahTxl",
 };
 
