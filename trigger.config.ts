@@ -4,11 +4,12 @@ export default defineConfig({
   project: "proj_bovzrrbowxlpesdbuqar",
   runtime: "node",
   logLevel: "log",
-  // The max compute seconds a task is allowed to run. If the task run exceeds this duration, it will be stopped.
-  // You can override this on an individual task.
-  // See https://trigger.dev/docs/runs/max-duration
-  maxDuration: 3600,
-  retries: {
+  build: {
+    commands: [
+      "pip install yt-dlp --break-system-packages",
+    ],
+  },
+  retryConfig: {
     enabledInDev: true,
     default: {
       maxAttempts: 3,
