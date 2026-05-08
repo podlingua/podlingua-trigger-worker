@@ -1,5 +1,8 @@
 import { task } from "@trigger.dev/sdk/v3";
 import { createClient } from "@supabase/supabase-js";
+import { execSync } from "child_process";
+import { existsSync, readFileSync, unlinkSync } from "fs";
+import { join } from "path";
 
 const VOICE_MAP: Record<string, string> = {
   "Spanish": "haaEg4BqiAAwDT7ahTxl",
@@ -68,6 +71,56 @@ async function dubChunk(text: string, voiceId: string, apiKey: string): Promise<
   return res.arrayBuffer();
 }
 
+function isDirectAudioUrl(url: string): boolean {
+  const audioExtensions = [".mp3", ".m4a", ".wav", ".ogg", ".aac", ".flac"];
+  try {
+    const parsed = new URL(url);
+    return audioExtensions.some(ext => parsed.pathname.toLowerCase().endsWith(ext));
+  } catch {
+    return false;
+  }
+}
+
+async function extractAudioWithYtDlp(url: string, supabase: any, bucket: string, episodeId: string): Promise<string> {
+  const tmpDir = "/tmp";
+  const outputTemplate = join(tmpDir, "audio_" + episodeId + ".%(ext)s");
+
+  console.log("[YT-DLP] Extracting audio from:", url);
+
+  try {
+    execSync(
+      "yt-dlp --extract-audio --audio-format mp3 --audio-quality 0 --no-playlist -o " +
+      JSON.stringify(outputTemplate) + " " + JSON.stringify(url),
+      { timeout: 300000, stdio: "pipe" }
+    );
+  } catch (err: any) {
+    throw new Error("yt-dlp failed to extract audio: " + (err.stderr?.toString() || err.message));
+  }
+
+  const outputPath = join(tmpDir, "audio_" + episodeId + ".mp3");
+  if (!existsSync(outputPath)) {
+    throw new Error("yt-dlp did not produce an output file at " + outputPath);
+  }
+
+  const audioBuffer = readFileSync(outputPath);
+  console.log("[YT-DLP] Audio extracted, size:", audioBuffer.byteLength);
+
+  const fileName = "jobs/" + episodeId + "/source/audio.mp3";
+  const { error: uploadError } = await supabase.storage
+    .from(bucket)
+    .upload(fileName, audioBuffer, { contentType: "audio/mpeg", upsert: true });
+
+  if (uploadError) {
+    throw new Error("Failed to upload extracted audio to Supabase: " + uploadError.message);
+  }
+
+  try { unlinkSync(outputPath); } catch {}
+
+  const { data: publicData } = supabase.storage.from(bucket).getPublicUrl(fileName);
+  console.log("[YT-DLP] Audio uploaded to Supabase:", publicData.publicUrl);
+  return publicData.publicUrl;
+}
+
 export const podcastOrchestrator = task({
   id: "podcast-orchestrator",
   machine: "medium-1x",
@@ -90,12 +143,22 @@ export const podcastOrchestrator = task({
 
     console.log("[STEP 1] ROOT TASK ENTERED", payload);
 
-    const audioUrl = payload.audioUrl || "https://storage.googleapis.com/aai-docs-samples/espn.m4a";
+    let audioUrl = payload.audioUrl || "https://storage.googleapis.com/aai-docs-samples/espn.m4a";
     const targetLanguage = payload.targetLanguage || "Spanish";
     const voiceId = VOICE_MAP[targetLanguage] || VOICE_MAP["default"];
     const previewMode = payload.previewMode === true;
+    const episodeId = payload.episodeId || "test";
 
-    console.log("[STEP 2] SUBMITTING AUDIO, TARGET:", targetLanguage, "VOICE:", voiceId, "PREVIEW:", previewMode);
+    console.log("[STEP 2] CHECKING AUDIO URL:", audioUrl);
+
+    if (!isDirectAudioUrl(audioUrl)) {
+      console.log("[STEP 2] NOT A DIRECT AUDIO URL - using yt-dlp to extract");
+      audioUrl = await extractAudioWithYtDlp(audioUrl, supabase, BUCKET, episodeId);
+    } else {
+      console.log("[STEP 2] DIRECT AUDIO URL - skipping yt-dlp");
+    }
+
+    console.log("[STEP 3] SUBMITTING TO ASSEMBLYAI, TARGET:", targetLanguage, "VOICE:", voiceId, "PREVIEW:", previewMode);
 
     const transcriptBody: any = {
       audio_url: audioUrl,
@@ -104,7 +167,7 @@ export const podcastOrchestrator = task({
 
     if (previewMode) {
       transcriptBody.audio_end_at = 180000;
-      console.log("[STEP 2] PREVIEW MODE - limiting to first 3 minutes");
+      console.log("[STEP 3] PREVIEW MODE - limiting to first 3 minutes");
     }
 
     const submitResponse = await fetch("https://api.assemblyai.com/v2/transcript", {
@@ -122,7 +185,7 @@ export const podcastOrchestrator = task({
       throw new Error("No transcript ID returned: " + JSON.stringify(submitJson));
     }
 
-    console.log("[STEP 3] POLLING FOR TRANSCRIPT", transcriptId);
+    console.log("[STEP 4] POLLING FOR TRANSCRIPT", transcriptId);
     let transcriptText = "";
 
     while (true) {
@@ -132,10 +195,10 @@ export const podcastOrchestrator = task({
         { headers: { Authorization: ASSEMBLYAI_API_KEY } }
       );
       const pollJson: any = await pollResponse.json();
-      console.log("[STEP 3.1] POLL STATUS", pollJson.status);
+      console.log("[STEP 4.1] POLL STATUS", pollJson.status);
       if (pollJson.status === "completed") {
         transcriptText = pollJson.text;
-        console.log("[STEP 3.2] TRANSCRIPT DONE, LENGTH:", transcriptText.length);
+        console.log("[STEP 4.2] TRANSCRIPT DONE, LENGTH:", transcriptText.length);
         break;
       }
       if (pollJson.status === "error") {
@@ -143,30 +206,30 @@ export const podcastOrchestrator = task({
       }
     }
 
-    console.log("[STEP 4] TRANSLATING IN CHUNKS");
+    console.log("[STEP 5] TRANSLATING IN CHUNKS");
     const translateChunks = splitIntoChunks(transcriptText, 2000);
-    console.log("[STEP 4.1] TRANSLATION CHUNKS:", translateChunks.length);
+    console.log("[STEP 5.1] TRANSLATION CHUNKS:", translateChunks.length);
 
     const translatedParts: string[] = [];
     for (let i = 0; i < translateChunks.length; i++) {
-      console.log("[STEP 4.2] TRANSLATING CHUNK " + (i + 1) + "/" + translateChunks.length);
+      console.log("[STEP 5.2] TRANSLATING CHUNK " + (i + 1) + "/" + translateChunks.length);
       const translated = await translateChunk(translateChunks[i], targetLanguage, OPENAI_API_KEY);
       translatedParts.push(translated);
       await new Promise((r) => setTimeout(r, 500));
     }
     const translationText = translatedParts.join(" ");
-    console.log("[STEP 4.3] TRANSLATION DONE, LENGTH:", translationText.length);
+    console.log("[STEP 5.3] TRANSLATION DONE, LENGTH:", translationText.length);
 
-    console.log("[STEP 5] DUBBING AND UPLOADING CHUNKS");
+    console.log("[STEP 6] DUBBING AND UPLOADING CHUNKS");
     const dubChunks = splitIntoChunks(translationText, 5000);
-    console.log("[STEP 5.1] DUB CHUNKS:", dubChunks.length);
+    console.log("[STEP 6.1] DUB CHUNKS:", dubChunks.length);
 
     const chunkUrls: string[] = [];
     for (let i = 0; i < dubChunks.length; i++) {
-      console.log("[STEP 5.2] DUBBING CHUNK " + (i + 1) + "/" + dubChunks.length);
+      console.log("[STEP 6.2] DUBBING CHUNK " + (i + 1) + "/" + dubChunks.length);
       const buf = await dubChunk(dubChunks[i], voiceId, ELEVENLABS_API_KEY);
 
-      const chunkFileName = "jobs/" + (payload.episodeId || "test") + "/chunks/chunk_" + i + "_" + Date.now() + ".mp3";
+      const chunkFileName = "jobs/" + episodeId + "/chunks/chunk_" + i + "_" + Date.now() + ".mp3";
       const { error: chunkUploadError } = await supabase.storage
         .from(BUCKET)
         .upload(chunkFileName, new Uint8Array(buf), {
@@ -180,13 +243,13 @@ export const podcastOrchestrator = task({
 
       const { data: chunkPublicData } = supabase.storage.from(BUCKET).getPublicUrl(chunkFileName);
       chunkUrls.push(chunkPublicData.publicUrl);
-      console.log("[STEP 5.3] CHUNK " + (i + 1) + " UPLOADED");
+      console.log("[STEP 6.3] CHUNK " + (i + 1) + " UPLOADED");
 
       await new Promise((r) => setTimeout(r, 500));
     }
 
-    console.log("[STEP 6] ALL CHUNKS UPLOADED, TOTAL:", chunkUrls.length);
-    console.log("[STEP 7] PIPELINE COMPLETE");
+    console.log("[STEP 7] ALL CHUNKS UPLOADED, TOTAL:", chunkUrls.length);
+    console.log("[STEP 8] PIPELINE COMPLETE");
 
     return {
       transcript: transcriptText,
