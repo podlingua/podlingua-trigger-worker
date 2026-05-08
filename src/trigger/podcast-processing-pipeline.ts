@@ -85,20 +85,32 @@ function installYtDlp(): void {
   try {
     execSync("which yt-dlp", { stdio: "pipe" });
     console.log("[YT-DLP] Already installed");
-  } catch {
-    console.log("[YT-DLP] Installing...");
+    return;
+  } catch {}
+
+  console.log("[YT-DLP] Installing via wget...");
+  try {
     execSync(
-      "curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /tmp/yt-dlp && chmod a+rx /tmp/yt-dlp",
+      "wget -q https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -O /tmp/yt-dlp && chmod a+rx /tmp/yt-dlp",
       { timeout: 60000, stdio: "pipe" }
     );
-    console.log("[YT-DLP] Installed to /tmp/yt-dlp");
-  }
+    console.log("[YT-DLP] Installed via wget");
+    return;
+  } catch {}
+
+  console.log("[YT-DLP] Installing via pip3...");
+  try {
+    execSync("pip3 install yt-dlp", { timeout: 120000, stdio: "pipe" });
+    console.log("[YT-DLP] Installed via pip3");
+    return;
+  } catch {}
+
+  throw new Error("Failed to install yt-dlp — curl, wget, and pip3 all unavailable");
 }
 
 function getYtDlpPath(): string {
   try {
-    const path = execSync("which yt-dlp", { stdio: "pipe" }).toString().trim();
-    return path;
+    return execSync("which yt-dlp", { stdio: "pipe" }).toString().trim();
   } catch {
     return "/tmp/yt-dlp";
   }
