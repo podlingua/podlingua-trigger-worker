@@ -81,7 +81,32 @@ function isDirectAudioUrl(url: string): boolean {
   }
 }
 
+function installYtDlp(): void {
+  try {
+    execSync("which yt-dlp", { stdio: "pipe" });
+    console.log("[YT-DLP] Already installed");
+  } catch {
+    console.log("[YT-DLP] Installing...");
+    execSync(
+      "curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /tmp/yt-dlp && chmod a+rx /tmp/yt-dlp",
+      { timeout: 60000, stdio: "pipe" }
+    );
+    console.log("[YT-DLP] Installed to /tmp/yt-dlp");
+  }
+}
+
+function getYtDlpPath(): string {
+  try {
+    const path = execSync("which yt-dlp", { stdio: "pipe" }).toString().trim();
+    return path;
+  } catch {
+    return "/tmp/yt-dlp";
+  }
+}
+
 async function extractAudioWithYtDlp(url: string, supabase: any, bucket: string, episodeId: string): Promise<string> {
+  installYtDlp();
+  const ytDlpPath = getYtDlpPath();
   const tmpDir = "/tmp";
   const outputTemplate = join(tmpDir, "audio_" + episodeId + ".%(ext)s");
 
@@ -89,7 +114,7 @@ async function extractAudioWithYtDlp(url: string, supabase: any, bucket: string,
 
   try {
     execSync(
-      "yt-dlp --extract-audio --audio-format mp3 --audio-quality 0 --no-playlist -o " +
+      ytDlpPath + " --extract-audio --audio-format mp3 --audio-quality 0 --no-playlist -o " +
       JSON.stringify(outputTemplate) + " " + JSON.stringify(url),
       { timeout: 300000, stdio: "pipe" }
     );
