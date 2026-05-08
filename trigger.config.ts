@@ -4,6 +4,7 @@ export default defineConfig({
   project: "proj_bovzrrbowxlpesdbuqar",
   runtime: "node",
   logLevel: "log",
+  maxDuration: 3600,
   build: {
     commands: [
       "pip install yt-dlp --break-system-packages",
