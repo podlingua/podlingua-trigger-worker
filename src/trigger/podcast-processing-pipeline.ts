@@ -1,8 +1,9 @@
 import { task } from "@trigger.dev/sdk/v3";
 import { createClient } from "@supabase/supabase-js";
 import { execSync } from "child_process";
-import { existsSync, readFileSync, unlinkSync } from "fs";
+import { existsSync, readFileSync, unlinkSync, writeFileSync } from "fs";
 import { join } from "path";
+import ffmpegStatic from "ffmpeg-static";
 
 const VOICE_MAP: Record<string, string> = {
   "Spanish": "haaEg4BqiAAwDT7ahTxl",
@@ -10,7 +11,6 @@ const VOICE_MAP: Record<string, string> = {
   "default": "haaEg4BqiAAwDT7ahTxl",
 };
 
-// Placeholder audio URL returned in test mode instead of calling ElevenLabs
 const TEST_MODE_AUDIO_URL = "https://storage.googleapis.com/aai-docs-samples/espn.m4a";
 
 function splitIntoChunks(text: string, maxChars: number): string[] {
@@ -161,6 +161,28 @@ async function extractAudioWithYtDlp(url: string, supabase: any, bucket: string,
   return publicData.publicUrl;
 }
 
+function mergeAudioChunks(chunkPaths: string[], outputPath: string): void {
+  console.log("[FFMPEG] Merging", chunkPaths.length, "chunks into", outputPath);
+
+  const listFilePath = "/tmp/chunks_list.txt";
+  const listContent = chunkPaths.map(p => "file '" + p + "'").join("\n");
+  writeFileSync(listFilePath, listContent);
+
+  const ffmpegPath = ffmpegStatic as unknown as string;
+
+  try {
+    execSync(
+      ffmpegPath + " -f concat -safe 0 -i " + listFilePath + " -c copy " + outputPath + " -y",
+      { timeout: 300000, stdio: "pipe" }
+    );
+    console.log("[FFMPEG] Merge complete");
+  } catch (err: any) {
+    throw new Error("ffmpeg merge failed: " + (err.stderr?.toString() || err.message));
+  } finally {
+    try { unlinkSync(listFilePath); } catch {}
+  }
+}
+
 export const podcastOrchestrator = task({
   id: "podcast-orchestrator",
   machine: "medium-1x",
@@ -263,7 +285,6 @@ export const podcastOrchestrator = task({
     const translationText = translatedParts.join(" ");
     console.log("[STEP 5.3] TRANSLATION DONE, LENGTH:", translationText.length);
 
-    // TEST MODE — skip ElevenLabs and return placeholder audio
     if (testMode) {
       console.log("[STEP 6] TEST MODE — skipping ElevenLabs dubbing");
       console.log("[STEP 7] PIPELINE COMPLETE (TEST MODE)");
@@ -276,42 +297,59 @@ export const podcastOrchestrator = task({
       };
     }
 
-    console.log("[STEP 6] DUBBING AND UPLOADING CHUNKS");
+    console.log("[STEP 6] DUBBING CHUNKS");
     const dubChunks = splitIntoChunks(translationText, 5000);
     console.log("[STEP 6.1] DUB CHUNKS:", dubChunks.length);
 
-    const chunkUrls: string[] = [];
+    const chunkPaths: string[] = [];
     for (let i = 0; i < dubChunks.length; i++) {
       console.log("[STEP 6.2] DUBBING CHUNK " + (i + 1) + "/" + dubChunks.length);
       const buf = await dubChunk(dubChunks[i], voiceId, ELEVENLABS_API_KEY);
 
-      const chunkFileName = "jobs/" + episodeId + "/chunks/chunk_" + i + "_" + Date.now() + ".mp3";
-      const { error: chunkUploadError } = await supabase.storage
-        .from(BUCKET)
-        .upload(chunkFileName, new Uint8Array(buf), {
-          contentType: "audio/mpeg",
-          upsert: true,
-        });
-
-      if (chunkUploadError) {
-        throw new Error("Supabase chunk upload error: " + chunkUploadError.message);
-      }
-
-      const { data: chunkPublicData } = supabase.storage.from(BUCKET).getPublicUrl(chunkFileName);
-      chunkUrls.push(chunkPublicData.publicUrl);
-      console.log("[STEP 6.3] CHUNK " + (i + 1) + " UPLOADED");
+      const chunkPath = "/tmp/chunk_" + episodeId + "_" + i + ".mp3";
+      writeFileSync(chunkPath, Buffer.from(buf));
+      chunkPaths.push(chunkPath);
+      console.log("[STEP 6.3] CHUNK " + (i + 1) + " SAVED TO DISK");
 
       await new Promise((r) => setTimeout(r, 500));
     }
 
-    console.log("[STEP 7] ALL CHUNKS UPLOADED, TOTAL:", chunkUrls.length);
-    console.log("[STEP 8] PIPELINE COMPLETE");
+    console.log("[STEP 7] MERGING CHUNKS WITH FFMPEG");
+    const mergedPath = "/tmp/merged_" + episodeId + ".mp3";
+    mergeAudioChunks(chunkPaths, mergedPath);
+
+    // Clean up chunk files
+    for (const chunkPath of chunkPaths) {
+      try { unlinkSync(chunkPath); } catch {}
+    }
+
+    console.log("[STEP 8] UPLOADING MERGED FILE TO SUPABASE");
+    const mergedBuffer = readFileSync(mergedPath);
+    const fileName = "jobs/" + episodeId + "/final/dubbed_" + Date.now() + ".mp3";
+
+    const { error: uploadError } = await supabase.storage
+      .from(BUCKET)
+      .upload(fileName, mergedBuffer, {
+        contentType: "audio/mpeg",
+        upsert: true,
+      });
+
+    if (uploadError) {
+      throw new Error("Supabase upload error: " + uploadError.message);
+    }
+
+    try { unlinkSync(mergedPath); } catch {}
+
+    const { data: publicData } = supabase.storage.from(BUCKET).getPublicUrl(fileName);
+    const finalAudioUrl = publicData.publicUrl;
+    console.log("[STEP 8.1] UPLOADED:", finalAudioUrl);
+    console.log("[STEP 9] PIPELINE COMPLETE");
 
     return {
       transcript: transcriptText,
       translation: translationText,
-      final_audio_url: chunkUrls[0],
-      audio_chunks: chunkUrls,
+      final_audio_url: finalAudioUrl,
+      audio_chunks: [finalAudioUrl],
     };
   },
 });
