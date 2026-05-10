@@ -1,9 +1,8 @@
 import { task } from "@trigger.dev/sdk/v3";
 import { createClient } from "@supabase/supabase-js";
 import { execSync } from "child_process";
-import { existsSync, readFileSync, unlinkSync, writeFileSync } from "fs";
+import { existsSync, readFileSync, unlinkSync, writeFileSync, createWriteStream } from "fs";
 import { join } from "path";
-import ffmpegStatic from "ffmpeg-static";
 
 const VOICE_MAP: Record<string, string> = {
   "Spanish": "haaEg4BqiAAwDT7ahTxl",
@@ -78,13 +77,9 @@ function isDirectAudioUrl(url: string): boolean {
   const audioExtensions = [".mp3", ".m4a", ".wav", ".ogg", ".aac", ".flac"];
   try {
     const parsed = new URL(url);
-    // Check file extension
     if (audioExtensions.some(ext => parsed.pathname.toLowerCase().endsWith(ext))) return true;
-    // Check if URL contains audio content type hint
     if (url.includes("audio%2Fmpeg") || url.includes("audio/mpeg") || url.includes("content-type=audio")) return true;
-    // Check known direct audio hosts
     if (url.includes("storage.filebin.net") || url.includes("storage.googleapis.com")) return true;
-    // Check for signed S3/cloud storage URLs that serve audio
     if (url.includes("X-Amz-Algorithm") && url.includes("audio")) return true;
     return false;
   } catch {
@@ -169,26 +164,31 @@ async function extractAudioWithYtDlp(url: string, supabase: any, bucket: string,
   return publicData.publicUrl;
 }
 
-function mergeAudioChunks(chunkPaths: string[], outputPath: string): void {
-  console.log("[FFMPEG] Merging", chunkPaths.length, "chunks into", outputPath);
+async function mergeAudioChunks(chunkPaths: string[], outputPath: string): Promise<void> {
+  console.log("[MERGE] Merging", chunkPaths.length, "chunks into", outputPath);
 
-  const listFilePath = "/tmp/chunks_list.txt";
-  const listContent = chunkPaths.map(p => "file '" + p + "'").join("\n");
-  writeFileSync(listFilePath, listContent);
+  const writeStream = createWriteStream(outputPath);
 
-  const ffmpegPath = ffmpegStatic as unknown as string;
+  await new Promise<void>((resolve, reject) => {
+    writeStream.on("finish", resolve);
+    writeStream.on("error", reject);
 
-  try {
-    execSync(
-      ffmpegPath + " -f concat -safe 0 -i " + listFilePath + " -c copy " + outputPath + " -y",
-      { timeout: 300000, stdio: "pipe" }
-    );
-    console.log("[FFMPEG] Merge complete");
-  } catch (err: any) {
-    throw new Error("ffmpeg merge failed: " + (err.stderr?.toString() || err.message));
-  } finally {
-    try { unlinkSync(listFilePath); } catch {}
-  }
+    const writeNext = (index: number) => {
+      if (index >= chunkPaths.length) {
+        writeStream.end();
+        return;
+      }
+      const chunk = readFileSync(chunkPaths[index]);
+      writeStream.write(chunk, (err) => {
+        if (err) reject(err);
+        else writeNext(index + 1);
+      });
+    };
+
+    writeNext(0);
+  });
+
+  console.log("[MERGE] Merge complete");
 }
 
 export const podcastOrchestrator = task({
@@ -322,9 +322,9 @@ export const podcastOrchestrator = task({
       await new Promise((r) => setTimeout(r, 500));
     }
 
-    console.log("[STEP 7] MERGING CHUNKS WITH FFMPEG");
+    console.log("[STEP 7] MERGING CHUNKS");
     const mergedPath = "/tmp/merged_" + episodeId + ".mp3";
-    mergeAudioChunks(chunkPaths, mergedPath);
+    await mergeAudioChunks(chunkPaths, mergedPath);
 
     for (const chunkPath of chunkPaths) {
       try { unlinkSync(chunkPath); } catch {}
