@@ -1,7 +1,8 @@
 {
   "dependencies": {
     "@supabase/supabase-js": "^2.104.1",
-    "@trigger.dev/sdk": "4.4.5"
+    "@trigger.dev/sdk": "4.4.5",
+    "ytdl-core": "^4.11.5"
   },
   "devDependencies": {
     "@trigger.dev/build": "4.4.5",

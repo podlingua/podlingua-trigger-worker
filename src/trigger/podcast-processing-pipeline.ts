@@ -10,6 +10,9 @@ const VOICE_MAP: Record<string, string> = {
   "default": "haaEg4BqiAAwDT7ahTxl",
 };
 
+// Placeholder audio URL returned in test mode instead of calling ElevenLabs
+const TEST_MODE_AUDIO_URL = "https://storage.googleapis.com/aai-docs-samples/espn.m4a";
+
 function splitIntoChunks(text: string, maxChars: number): string[] {
   const chunks = [];
   let start = 0;
@@ -184,7 +187,10 @@ export const podcastOrchestrator = task({
     const targetLanguage = payload.targetLanguage || "Spanish";
     const voiceId = VOICE_MAP[targetLanguage] || VOICE_MAP["default"];
     const previewMode = payload.previewMode === true;
+    const testMode = payload.testMode === true;
     const episodeId = payload.episodeId || "test";
+
+    console.log("[STEP 1] TEST MODE:", testMode, "PREVIEW MODE:", previewMode);
 
     console.log("[STEP 2] CHECKING AUDIO URL:", audioUrl);
 
@@ -256,6 +262,19 @@ export const podcastOrchestrator = task({
     }
     const translationText = translatedParts.join(" ");
     console.log("[STEP 5.3] TRANSLATION DONE, LENGTH:", translationText.length);
+
+    // TEST MODE — skip ElevenLabs and return placeholder audio
+    if (testMode) {
+      console.log("[STEP 6] TEST MODE — skipping ElevenLabs dubbing");
+      console.log("[STEP 7] PIPELINE COMPLETE (TEST MODE)");
+      return {
+        transcript: transcriptText,
+        translation: translationText,
+        final_audio_url: TEST_MODE_AUDIO_URL,
+        audio_chunks: [TEST_MODE_AUDIO_URL],
+        test_mode: true,
+      };
+    }
 
     console.log("[STEP 6] DUBBING AND UPLOADING CHUNKS");
     const dubChunks = splitIntoChunks(translationText, 5000);
