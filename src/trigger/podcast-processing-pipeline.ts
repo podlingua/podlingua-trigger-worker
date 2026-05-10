@@ -78,7 +78,15 @@ function isDirectAudioUrl(url: string): boolean {
   const audioExtensions = [".mp3", ".m4a", ".wav", ".ogg", ".aac", ".flac"];
   try {
     const parsed = new URL(url);
-    return audioExtensions.some(ext => parsed.pathname.toLowerCase().endsWith(ext));
+    // Check file extension
+    if (audioExtensions.some(ext => parsed.pathname.toLowerCase().endsWith(ext))) return true;
+    // Check if URL contains audio content type hint
+    if (url.includes("audio%2Fmpeg") || url.includes("audio/mpeg") || url.includes("content-type=audio")) return true;
+    // Check known direct audio hosts
+    if (url.includes("storage.filebin.net") || url.includes("storage.googleapis.com")) return true;
+    // Check for signed S3/cloud storage URLs that serve audio
+    if (url.includes("X-Amz-Algorithm") && url.includes("audio")) return true;
+    return false;
   } catch {
     return false;
   }
@@ -318,7 +326,6 @@ export const podcastOrchestrator = task({
     const mergedPath = "/tmp/merged_" + episodeId + ".mp3";
     mergeAudioChunks(chunkPaths, mergedPath);
 
-    // Clean up chunk files
     for (const chunkPath of chunkPaths) {
       try { unlinkSync(chunkPath); } catch {}
     }
