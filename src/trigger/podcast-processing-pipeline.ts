@@ -290,7 +290,7 @@ export const podcastOrchestrator = task({
 
     const transcriptBody: any = {
       audio_url: audioUrl,
-      speech_model: "universal",
+      speech_models: ["universal-2"],
       speaker_labels: true,
     };
 
