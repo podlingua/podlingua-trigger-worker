@@ -17,9 +17,15 @@ const FRENCH_VOICE_POOL = [
   "mVjOqyqTPfwlXPjV5sjX",
 ];
 
+// Chinese (Mandarin) starts single-voice; add more later
+const CHINESE_VOICE_POOL = [
+  "agczkAUlHLowaNnL72Cc", // Adrian
+];
+
 function getVoicePool(targetLanguage: string): string[] {
   if (targetLanguage === "Spanish") return SPANISH_VOICE_POOL;
   if (targetLanguage === "French") return FRENCH_VOICE_POOL;
+  if (targetLanguage === "Chinese") return CHINESE_VOICE_POOL;
   return SPANISH_VOICE_POOL; // default fallback
 }
 
