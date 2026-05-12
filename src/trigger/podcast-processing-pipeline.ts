@@ -4,15 +4,29 @@ import { execSync } from "child_process";
 import { existsSync, readFileSync, unlinkSync, writeFileSync, createWriteStream } from "fs";
 import { join } from "path";
 
-const VOICE_MAP: Record<string, string> = {
-  "Spanish": "haaEg4BqiAAwDT7ahTxl",
-  "French": "mVjOqyqTPfwlXPjV5sjX",
-  "default": "haaEg4BqiAAwDT7ahTxl",
-};
+// Multi-voice pool for Spanish (auto-assigned per detected speaker)
+const SPANISH_VOICE_POOL = [
+  "MQOw6rAjjxLeifjqjuCo", // El Faraon - M
+  "DVckUv1C6yTiOFMjZW4e", // Dora Lanarra - F
+  "p7AwDmKvTdoHTBuueGvP", // Malena - F
+  "haaEg4BqiAAwDT7ahTxl", // Roderick - M
+];
+
+// French stays single-voice for now; add more voice IDs to expand later
+const FRENCH_VOICE_POOL = [
+  "mVjOqyqTPfwlXPjV5sjX",
+];
+
+function getVoicePool(targetLanguage: string): string[] {
+  if (targetLanguage === "Spanish") return SPANISH_VOICE_POOL;
+  if (targetLanguage === "French") return FRENCH_VOICE_POOL;
+  return SPANISH_VOICE_POOL; // default fallback
+}
 
 const TEST_MODE_AUDIO_URL = "https://storage.googleapis.com/aai-docs-samples/espn.m4a";
 
-function splitIntoChunks(text: string, maxChars: number): string[] {
+// Split a long string into ~maxChars chunks, breaking on sentence boundaries
+function splitTextIntoChunks(text: string, maxChars: number): string[] {
   const chunks = [];
   let start = 0;
   while (start < text.length) {
@@ -24,6 +38,46 @@ function splitIntoChunks(text: string, maxChars: number): string[] {
     chunks.push(text.slice(start, end).trim());
     start = end;
   }
+  return chunks;
+}
+
+// Group consecutive utterances by the same speaker into speaker-turn chunks.
+// If a single speaker's turn is longer than maxChars, split it but keep the speaker label.
+type SpeakerChunk = { speaker: string; text: string; start: number };
+
+function buildSpeakerChunks(utterances: any[], maxChars: number): SpeakerChunk[] {
+  if (!utterances || utterances.length === 0) return [];
+
+  const chunks: SpeakerChunk[] = [];
+  let currentSpeaker = utterances[0].speaker;
+  let currentText = "";
+  let currentStart = utterances[0].start;
+
+  const flush = () => {
+    const trimmed = currentText.trim();
+    if (!trimmed) return;
+    if (trimmed.length <= maxChars) {
+      chunks.push({ speaker: currentSpeaker, text: trimmed, start: currentStart });
+    } else {
+      const subChunks = splitTextIntoChunks(trimmed, maxChars);
+      for (const sub of subChunks) {
+        chunks.push({ speaker: currentSpeaker, text: sub, start: currentStart });
+      }
+    }
+  };
+
+  for (const u of utterances) {
+    if (u.speaker === currentSpeaker) {
+      currentText += (currentText ? " " : "") + u.text;
+    } else {
+      flush();
+      currentSpeaker = u.speaker;
+      currentText = u.text;
+      currentStart = u.start;
+    }
+  }
+  flush();
+
   return chunks;
 }
 
@@ -215,12 +269,13 @@ export const podcastOrchestrator = task({
 
     let audioUrl = payload.audioUrl || "https://storage.googleapis.com/aai-docs-samples/espn.m4a";
     const targetLanguage = payload.targetLanguage || "Spanish";
-    const voiceId = VOICE_MAP[targetLanguage] || VOICE_MAP["default"];
+    const voicePool = getVoicePool(targetLanguage);
     const previewMode = payload.previewMode === true;
     const testMode = payload.testMode === true;
     const episodeId = payload.episodeId || "test";
 
     console.log("[STEP 1] TEST MODE:", testMode, "PREVIEW MODE:", previewMode);
+    console.log("[STEP 1] VOICE POOL SIZE:", voicePool.length, "for language:", targetLanguage);
 
     console.log("[STEP 2] CHECKING AUDIO URL:", audioUrl);
 
@@ -231,11 +286,12 @@ export const podcastOrchestrator = task({
       console.log("[STEP 2] DIRECT AUDIO URL - skipping yt-dlp");
     }
 
-    console.log("[STEP 3] SUBMITTING TO ASSEMBLYAI, TARGET:", targetLanguage, "VOICE:", voiceId, "PREVIEW:", previewMode);
+    console.log("[STEP 3] SUBMITTING TO ASSEMBLYAI WITH SPEAKER LABELS, TARGET:", targetLanguage, "PREVIEW:", previewMode);
 
     const transcriptBody: any = {
       audio_url: audioUrl,
-      speech_models: ["universal-2"],
+      speech_model: "universal",
+      speaker_labels: true,
     };
 
     if (previewMode) {
@@ -260,6 +316,7 @@ export const podcastOrchestrator = task({
 
     console.log("[STEP 4] POLLING FOR TRANSCRIPT", transcriptId);
     let transcriptText = "";
+    let utterances: any[] = [];
 
     while (true) {
       await new Promise((r) => setTimeout(r, 3000));
@@ -271,7 +328,8 @@ export const podcastOrchestrator = task({
       console.log("[STEP 4.1] POLL STATUS", pollJson.status);
       if (pollJson.status === "completed") {
         transcriptText = pollJson.text;
-        console.log("[STEP 4.2] TRANSCRIPT DONE, LENGTH:", transcriptText.length);
+        utterances = pollJson.utterances || [];
+        console.log("[STEP 4.2] TRANSCRIPT DONE, LENGTH:", transcriptText.length, "UTTERANCES:", utterances.length);
         break;
       }
       if (pollJson.status === "error") {
@@ -279,19 +337,43 @@ export const podcastOrchestrator = task({
       }
     }
 
-    console.log("[STEP 5] TRANSLATING IN CHUNKS");
-    const translateChunks = splitIntoChunks(transcriptText, 2000);
-    console.log("[STEP 5.1] TRANSLATION CHUNKS:", translateChunks.length);
+    // Build speaker-aware chunks. Fall back to plain text chunking if no utterances came back.
+    let speakerChunks: SpeakerChunk[];
+    if (utterances.length > 0) {
+      speakerChunks = buildSpeakerChunks(utterances, 2000);
+      console.log("[STEP 5] BUILT", speakerChunks.length, "SPEAKER-AWARE CHUNKS");
+    } else {
+      console.log("[STEP 5] NO UTTERANCES — falling back to single-speaker chunking");
+      const fallbackChunks = splitTextIntoChunks(transcriptText, 2000);
+      speakerChunks = fallbackChunks.map((text, i) => ({ speaker: "A", text, start: i }));
+    }
 
-    const translatedParts: string[] = [];
-    for (let i = 0; i < translateChunks.length; i++) {
-      console.log("[STEP 5.2] TRANSLATING CHUNK " + (i + 1) + "/" + translateChunks.length);
-      const translated = await translateChunk(translateChunks[i], targetLanguage, OPENAI_API_KEY);
-      translatedParts.push(translated);
+    // Assign each unique speaker to a voice from the pool, in order of appearance
+    const speakerToVoice: Record<string, string> = {};
+    let voiceIndex = 0;
+    for (const chunk of speakerChunks) {
+      if (!speakerToVoice[chunk.speaker]) {
+        speakerToVoice[chunk.speaker] = voicePool[voiceIndex % voicePool.length];
+        voiceIndex++;
+      }
+    }
+    console.log("[STEP 5.1] SPEAKER → VOICE ASSIGNMENTS:", speakerToVoice);
+
+    console.log("[STEP 5.2] TRANSLATING", speakerChunks.length, "CHUNKS");
+    const translatedChunks: SpeakerChunk[] = [];
+    for (let i = 0; i < speakerChunks.length; i++) {
+      console.log("[STEP 5.3] TRANSLATING CHUNK " + (i + 1) + "/" + speakerChunks.length + " (speaker " + speakerChunks[i].speaker + ")");
+      const translated = await translateChunk(speakerChunks[i].text, targetLanguage, OPENAI_API_KEY);
+      translatedChunks.push({
+        speaker: speakerChunks[i].speaker,
+        text: translated,
+        start: speakerChunks[i].start,
+      });
       await new Promise((r) => setTimeout(r, 500));
     }
-    const translationText = translatedParts.join(" ");
-    console.log("[STEP 5.3] TRANSLATION DONE, LENGTH:", translationText.length);
+
+    const translationText = translatedChunks.map(c => "[" + c.speaker + "] " + c.text).join("\n\n");
+    console.log("[STEP 5.4] TRANSLATION DONE, TOTAL CHUNKS:", translatedChunks.length);
 
     if (testMode) {
       console.log("[STEP 6] TEST MODE — skipping ElevenLabs dubbing");
@@ -299,25 +381,27 @@ export const podcastOrchestrator = task({
       return {
         transcript: transcriptText,
         translation: translationText,
+        speaker_assignments: speakerToVoice,
         final_audio_url: TEST_MODE_AUDIO_URL,
         audio_chunks: [TEST_MODE_AUDIO_URL],
         test_mode: true,
       };
     }
 
-    console.log("[STEP 6] DUBBING CHUNKS");
-    const dubChunks = splitIntoChunks(translationText, 5000);
-    console.log("[STEP 6.1] DUB CHUNKS:", dubChunks.length);
+    console.log("[STEP 6] DUBBING", translatedChunks.length, "CHUNKS WITH MULTI-VOICE");
 
     const chunkPaths: string[] = [];
-    for (let i = 0; i < dubChunks.length; i++) {
-      console.log("[STEP 6.2] DUBBING CHUNK " + (i + 1) + "/" + dubChunks.length);
-      const buf = await dubChunk(dubChunks[i], voiceId, ELEVENLABS_API_KEY);
+    for (let i = 0; i < translatedChunks.length; i++) {
+      const chunk = translatedChunks[i];
+      const voiceId = speakerToVoice[chunk.speaker];
+      console.log("[STEP 6.1] DUBBING CHUNK " + (i + 1) + "/" + translatedChunks.length + " (speaker " + chunk.speaker + " → " + voiceId + ")");
+
+      const buf = await dubChunk(chunk.text, voiceId, ELEVENLABS_API_KEY);
 
       const chunkPath = "/tmp/chunk_" + episodeId + "_" + i + ".mp3";
       writeFileSync(chunkPath, Buffer.from(buf));
       chunkPaths.push(chunkPath);
-      console.log("[STEP 6.3] CHUNK " + (i + 1) + " SAVED TO DISK");
+      console.log("[STEP 6.2] CHUNK " + (i + 1) + " SAVED TO DISK");
 
       await new Promise((r) => setTimeout(r, 500));
     }
@@ -355,6 +439,7 @@ export const podcastOrchestrator = task({
     return {
       transcript: transcriptText,
       translation: translationText,
+      speaker_assignments: speakerToVoice,
       final_audio_url: finalAudioUrl,
       audio_chunks: [finalAudioUrl],
     };
