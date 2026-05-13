@@ -22,10 +22,16 @@ const CHINESE_VOICE_POOL = [
   "agczkAUlHLowaNnL72Cc", // Adrian
 ];
 
+// German starts single-voice; add more later
+const GERMAN_VOICE_POOL = [
+  "VHYWoxffK1pFlM1dtRb0",
+];
+
 function getVoicePool(targetLanguage: string): string[] {
   if (targetLanguage === "Spanish") return SPANISH_VOICE_POOL;
   if (targetLanguage === "French") return FRENCH_VOICE_POOL;
   if (targetLanguage === "Chinese") return CHINESE_VOICE_POOL;
+  if (targetLanguage === "German") return GERMAN_VOICE_POOL;
   return SPANISH_VOICE_POOL; // default fallback
 }
 
@@ -365,17 +371,31 @@ export const podcastOrchestrator = task({
     }
     console.log("[STEP 5.1] SPEAKER → VOICE ASSIGNMENTS:", speakerToVoice);
 
-    console.log("[STEP 5.2] TRANSLATING", speakerChunks.length, "CHUNKS");
-    const translatedChunks: SpeakerChunk[] = [];
-    for (let i = 0; i < speakerChunks.length; i++) {
-      console.log("[STEP 5.3] TRANSLATING CHUNK " + (i + 1) + "/" + speakerChunks.length + " (speaker " + speakerChunks[i].speaker + ")");
-      const translated = await translateChunk(speakerChunks[i].text, targetLanguage, OPENAI_API_KEY);
-      translatedChunks.push({
-        speaker: speakerChunks[i].speaker,
-        text: translated,
-        start: speakerChunks[i].start,
-      });
-      await new Promise((r) => setTimeout(r, 500));
+    console.log("[STEP 5.2] TRANSLATING", speakerChunks.length, "CHUNKS IN PARALLEL (batches of 5)");
+    const translatedChunks: SpeakerChunk[] = new Array(speakerChunks.length);
+    const TRANSLATION_BATCH_SIZE = 5;
+
+    for (let i = 0; i < speakerChunks.length; i += TRANSLATION_BATCH_SIZE) {
+      const batch = speakerChunks.slice(i, i + TRANSLATION_BATCH_SIZE);
+      console.log("[STEP 5.3] TRANSLATING BATCH " + (Math.floor(i / TRANSLATION_BATCH_SIZE) + 1) + " (chunks " + (i + 1) + "-" + Math.min(i + TRANSLATION_BATCH_SIZE, speakerChunks.length) + "/" + speakerChunks.length + ")");
+
+      const batchResults = await Promise.all(
+        batch.map(async (chunk, batchIdx) => {
+          const translated = await translateChunk(chunk.text, targetLanguage, OPENAI_API_KEY);
+          return {
+            index: i + batchIdx,
+            chunk: {
+              speaker: chunk.speaker,
+              text: translated,
+              start: chunk.start,
+            },
+          };
+        })
+      );
+
+      for (const result of batchResults) {
+        translatedChunks[result.index] = result.chunk;
+      }
     }
 
     const translationText = translatedChunks.map(c => "[" + c.speaker + "] " + c.text).join("\n\n");
@@ -394,22 +414,31 @@ export const podcastOrchestrator = task({
       };
     }
 
-    console.log("[STEP 6] DUBBING", translatedChunks.length, "CHUNKS WITH MULTI-VOICE");
+    console.log("[STEP 6] DUBBING", translatedChunks.length, "CHUNKS IN PARALLEL (batches of 5)");
 
-    const chunkPaths: string[] = [];
-    for (let i = 0; i < translatedChunks.length; i++) {
-      const chunk = translatedChunks[i];
-      const voiceId = speakerToVoice[chunk.speaker];
-      console.log("[STEP 6.1] DUBBING CHUNK " + (i + 1) + "/" + translatedChunks.length + " (speaker " + chunk.speaker + " → " + voiceId + ")");
+    const chunkPaths: string[] = new Array(translatedChunks.length);
+    const DUB_BATCH_SIZE = 5;
 
-      const buf = await dubChunk(chunk.text, voiceId, ELEVENLABS_API_KEY);
+    for (let i = 0; i < translatedChunks.length; i += DUB_BATCH_SIZE) {
+      const batch = translatedChunks.slice(i, i + DUB_BATCH_SIZE);
+      console.log("[STEP 6.1] DUBBING BATCH " + (Math.floor(i / DUB_BATCH_SIZE) + 1) + " (chunks " + (i + 1) + "-" + Math.min(i + DUB_BATCH_SIZE, translatedChunks.length) + "/" + translatedChunks.length + ")");
 
-      const chunkPath = "/tmp/chunk_" + episodeId + "_" + i + ".mp3";
-      writeFileSync(chunkPath, Buffer.from(buf));
-      chunkPaths.push(chunkPath);
-      console.log("[STEP 6.2] CHUNK " + (i + 1) + " SAVED TO DISK");
+      const batchResults = await Promise.all(
+        batch.map(async (chunk, batchIdx) => {
+          const absoluteIndex = i + batchIdx;
+          const voiceId = speakerToVoice[chunk.speaker];
+          console.log("[STEP 6.2] DUBBING CHUNK " + (absoluteIndex + 1) + " (speaker " + chunk.speaker + " → " + voiceId + ")");
 
-      await new Promise((r) => setTimeout(r, 500));
+          const buf = await dubChunk(chunk.text, voiceId, ELEVENLABS_API_KEY);
+          const chunkPath = "/tmp/chunk_" + episodeId + "_" + absoluteIndex + ".mp3";
+          writeFileSync(chunkPath, Buffer.from(buf));
+          return { index: absoluteIndex, path: chunkPath };
+        })
+      );
+
+      for (const result of batchResults) {
+        chunkPaths[result.index] = result.path;
+      }
     }
 
     console.log("[STEP 7] MERGING CHUNKS");
