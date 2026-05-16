@@ -27,11 +27,20 @@ const GERMAN_VOICE_POOL = [
   "VHYWoxffK1pFlM1dtRb0",
 ];
 
+// English voice pool for any-language → English dubbing
+const ENGLISH_VOICE_POOL = [
+  "TYKLc7ViOIGE13dSZYlK", // Rachel - F
+  "BuaKXS4Sv1Mccaw3flfU", // Christina - F
+  "nzFihrBIvB34imQBuxub", // Josh - M
+  "7WggD3IoWTIPT19PNyrW", // Jarnathan - M
+];
+
 function getVoicePool(targetLanguage: string): string[] {
   if (targetLanguage === "Spanish") return SPANISH_VOICE_POOL;
   if (targetLanguage === "French") return FRENCH_VOICE_POOL;
   if (targetLanguage === "Chinese") return CHINESE_VOICE_POOL;
   if (targetLanguage === "German") return GERMAN_VOICE_POOL;
+  if (targetLanguage === "English") return ENGLISH_VOICE_POOL;
   return SPANISH_VOICE_POOL; // default fallback
 }
 
@@ -93,7 +102,22 @@ function buildSpeakerChunks(utterances: any[], maxChars: number): SpeakerChunk[]
   return chunks;
 }
 
-async function translateChunk(text: string, targetLanguage: string, apiKey: string): Promise<string> {
+async function translateChunk(
+  text: string,
+  targetLanguage: string,
+  apiKey: string,
+  detectedLanguageCode?: string
+): Promise<string> {
+  // If target is English and source is already English, skip translation
+  if (targetLanguage === "English" && detectedLanguageCode === "en") {
+    return text;
+  }
+
+  const prompt =
+    targetLanguage === "English"
+      ? `Translate this into English. Preserve speaker tone and natural speech patterns:\n\n${text}`
+      : `Translate this into ${targetLanguage}:\n\n${text}`;
+
   const res = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -104,7 +128,7 @@ async function translateChunk(text: string, targetLanguage: string, apiKey: stri
       model: "gpt-4o-mini",
       messages: [
         { role: "system", content: "You are a professional translator. Return only the translated text." },
-        { role: "user", content: "Translate this into " + targetLanguage + ":\n\n" + text },
+        { role: "user", content: prompt },
       ],
       temperature: 0.2,
     }),
@@ -287,7 +311,7 @@ export const podcastOrchestrator = task({
     const episodeId = payload.episodeId || "test";
 
     console.log("[STEP 1] TEST MODE:", testMode, "PREVIEW MODE:", previewMode);
-    console.log("[STEP 1] VOICE POOL SIZE:", voicePool.length, "for language:", targetLanguage);
+    console.log("[STEP 1] TARGET LANGUAGE:", targetLanguage, "VOICE POOL SIZE:", voicePool.length);
 
     console.log("[STEP 2] CHECKING AUDIO URL:", audioUrl);
 
@@ -298,12 +322,13 @@ export const podcastOrchestrator = task({
       console.log("[STEP 2] DIRECT AUDIO URL - skipping yt-dlp");
     }
 
-    console.log("[STEP 3] SUBMITTING TO ASSEMBLYAI WITH SPEAKER LABELS, TARGET:", targetLanguage, "PREVIEW:", previewMode);
+    console.log("[STEP 3] SUBMITTING TO ASSEMBLYAI, TARGET:", targetLanguage, "PREVIEW:", previewMode);
 
     const transcriptBody: any = {
       audio_url: audioUrl,
       speech_models: ["universal-2"],
       speaker_labels: true,
+      language_detection: true, // auto-detects Hindi, Spanish, French, any language
     };
 
     if (previewMode) {
@@ -329,6 +354,7 @@ export const podcastOrchestrator = task({
     console.log("[STEP 4] POLLING FOR TRANSCRIPT", transcriptId);
     let transcriptText = "";
     let utterances: any[] = [];
+    let detectedLanguageCode = "en"; // default, overwritten on completion
 
     while (true) {
       await new Promise((r) => setTimeout(r, 3000));
@@ -341,7 +367,8 @@ export const podcastOrchestrator = task({
       if (pollJson.status === "completed") {
         transcriptText = pollJson.text;
         utterances = pollJson.utterances || [];
-        console.log("[STEP 4.2] TRANSCRIPT DONE, LENGTH:", transcriptText.length, "UTTERANCES:", utterances.length);
+        detectedLanguageCode = pollJson.language_code || "en";
+        console.log("[STEP 4.2] TRANSCRIPT DONE, LENGTH:", transcriptText.length, "UTTERANCES:", utterances.length, "DETECTED LANGUAGE:", detectedLanguageCode);
         break;
       }
       if (pollJson.status === "error") {
@@ -381,7 +408,7 @@ export const podcastOrchestrator = task({
 
       const batchResults = await Promise.all(
         batch.map(async (chunk, batchIdx) => {
-          const translated = await translateChunk(chunk.text, targetLanguage, OPENAI_API_KEY);
+          const translated = await translateChunk(chunk.text, targetLanguage, OPENAI_API_KEY, detectedLanguageCode);
           return {
             index: i + batchIdx,
             chunk: {
@@ -408,6 +435,7 @@ export const podcastOrchestrator = task({
         transcript: transcriptText,
         translation: translationText,
         speaker_assignments: speakerToVoice,
+        detected_language: detectedLanguageCode,
         final_audio_url: TEST_MODE_AUDIO_URL,
         audio_chunks: [TEST_MODE_AUDIO_URL],
         test_mode: true,
@@ -475,6 +503,7 @@ export const podcastOrchestrator = task({
       transcript: transcriptText,
       translation: translationText,
       speaker_assignments: speakerToVoice,
+      detected_language: detectedLanguageCode,
       final_audio_url: finalAudioUrl,
       audio_chunks: [finalAudioUrl],
     };
