@@ -4,7 +4,8 @@ import { execSync } from "child_process";
 import { existsSync, readFileSync, unlinkSync, writeFileSync, createWriteStream } from "fs";
 import { join } from "path";
 
-// Multi-voice pool for Spanish (auto-assigned per detected speaker)
+// ─── Voice Pools ─────────────────────────────────────────────────────────────
+
 const SPANISH_VOICE_POOL = [
   "MQOw6rAjjxLeifjqjuCo", // El Faraon - M
   "DVckUv1C6yTiOFMjZW4e", // Dora Lanarra - F
@@ -12,22 +13,18 @@ const SPANISH_VOICE_POOL = [
   "haaEg4BqiAAwDT7ahTxl", // Roderick - M
 ];
 
-// French stays single-voice for now; add more voice IDs to expand later
 const FRENCH_VOICE_POOL = [
   "mVjOqyqTPfwlXPjV5sjX",
 ];
 
-// Chinese (Mandarin) starts single-voice; add more later
 const CHINESE_VOICE_POOL = [
   "agczkAUlHLowaNnL72Cc", // Adrian
 ];
 
-// German starts single-voice; add more later
 const GERMAN_VOICE_POOL = [
   "VHYWoxffK1pFlM1dtRb0",
 ];
 
-// English voice pool for any-language → English dubbing
 const ENGLISH_VOICE_POOL = [
   "TYKLc7ViOIGE13dSZYlK", // Rachel - F
   "BuaKXS4Sv1Mccaw3flfU", // Christina - F
@@ -41,14 +38,24 @@ function getVoicePool(targetLanguage: string): string[] {
   if (targetLanguage === "Chinese") return CHINESE_VOICE_POOL;
   if (targetLanguage === "German") return GERMAN_VOICE_POOL;
   if (targetLanguage === "English") return ENGLISH_VOICE_POOL;
-  return SPANISH_VOICE_POOL; // default fallback
+  return SPANISH_VOICE_POOL;
 }
 
-const TEST_MODE_AUDIO_URL = "https://storage.googleapis.com/aai-docs-samples/espn.m4a";
+// ─── Constants ───────────────────────────────────────────────────────────────
 
-// Split a long string into ~maxChars chunks, breaking on sentence boundaries
+const TEST_MODE_AUDIO_URL = "https://storage.googleapis.com/aai-docs-samples/espn.m4a";
+const TRANSLATION_BATCH_SIZE = 5;
+const DUB_BATCH_SIZE = 5;
+const MAX_CHARS_PER_CHUNK = 2000;
+
+// ─── Types ───────────────────────────────────────────────────────────────────
+
+type SpeakerChunk = { speaker: string; text: string; start: number };
+
+// ─── Text Chunking ───────────────────────────────────────────────────────────
+
 function splitTextIntoChunks(text: string, maxChars: number): string[] {
-  const chunks = [];
+  const chunks: string[] = [];
   let start = 0;
   while (start < text.length) {
     let end = start + maxChars;
@@ -61,10 +68,6 @@ function splitTextIntoChunks(text: string, maxChars: number): string[] {
   }
   return chunks;
 }
-
-// Group consecutive utterances by the same speaker into speaker-turn chunks.
-// If a single speaker's turn is longer than maxChars, split it but keep the speaker label.
-type SpeakerChunk = { speaker: string; text: string; start: number };
 
 function buildSpeakerChunks(utterances: any[], maxChars: number): SpeakerChunk[] {
   if (!utterances || utterances.length === 0) return [];
@@ -102,13 +105,14 @@ function buildSpeakerChunks(utterances: any[], maxChars: number): SpeakerChunk[]
   return chunks;
 }
 
+// ─── Translation ─────────────────────────────────────────────────────────────
+
 async function translateChunk(
   text: string,
   targetLanguage: string,
   apiKey: string,
   detectedLanguageCode?: string
 ): Promise<string> {
-  // If target is English and source is already English, skip translation
   if (targetLanguage === "English" && detectedLanguageCode === "en") {
     return text;
   }
@@ -133,12 +137,15 @@ async function translateChunk(
       temperature: 0.2,
     }),
   });
+
   const json = await res.json();
   if (!json.choices?.[0]?.message?.content) {
-    throw new Error("OpenAI chunk translation failed: " + JSON.stringify(json));
+    throw new Error("OpenAI translation failed: " + JSON.stringify(json));
   }
   return json.choices[0].message.content.trim();
 }
+
+// ─── Dubbing ─────────────────────────────────────────────────────────────────
 
 async function dubChunk(text: string, voiceId: string, apiKey: string): Promise<ArrayBuffer> {
   const res = await fetch(
@@ -156,12 +163,16 @@ async function dubChunk(text: string, voiceId: string, apiKey: string): Promise<
       }),
     }
   );
+
   if (!res.ok) {
     const errorText = await res.text();
     throw new Error("ElevenLabs error: " + errorText);
   }
+
   return res.arrayBuffer();
 }
+
+// ─── Audio URL Detection ─────────────────────────────────────────────────────
 
 function isDirectAudioUrl(url: string): boolean {
   const audioExtensions = [".mp3", ".m4a", ".wav", ".ogg", ".aac", ".flac"];
@@ -176,6 +187,8 @@ function isDirectAudioUrl(url: string): boolean {
     return false;
   }
 }
+
+// ─── yt-dlp ──────────────────────────────────────────────────────────────────
 
 function installYtDlp(): void {
   try {
@@ -212,7 +225,12 @@ function getYtDlpPath(): string {
   }
 }
 
-async function extractAudioWithYtDlp(url: string, supabase: any, bucket: string, episodeId: string): Promise<string> {
+async function extractAudioWithYtDlp(
+  url: string,
+  supabase: any,
+  bucket: string,
+  episodeId: string
+): Promise<string> {
   installYtDlp();
   const ytDlpPath = getYtDlpPath();
   const tmpDir = "/tmp";
@@ -222,21 +240,24 @@ async function extractAudioWithYtDlp(url: string, supabase: any, bucket: string,
 
   try {
     execSync(
-      ytDlpPath + " --extract-audio --audio-format mp3 --audio-quality 0 --no-playlist -o " +
-      JSON.stringify(outputTemplate) + " " + JSON.stringify(url),
+      ytDlpPath +
+        " --extract-audio --audio-format mp3 --audio-quality 0 --no-playlist -o " +
+        JSON.stringify(outputTemplate) +
+        " " +
+        JSON.stringify(url),
       { timeout: 300000, stdio: "pipe" }
     );
   } catch (err: any) {
-    throw new Error("yt-dlp failed to extract audio: " + (err.stderr?.toString() || err.message));
+    throw new Error("yt-dlp failed: " + (err.stderr?.toString() || err.message));
   }
 
   const outputPath = join(tmpDir, "audio_" + episodeId + ".mp3");
   if (!existsSync(outputPath)) {
-    throw new Error("yt-dlp did not produce an output file at " + outputPath);
+    throw new Error("yt-dlp did not produce output at " + outputPath);
   }
 
   const audioBuffer = readFileSync(outputPath);
-  console.log("[YT-DLP] Audio extracted, size:", audioBuffer.byteLength);
+  console.log("[YT-DLP] Extracted, size:", audioBuffer.byteLength);
 
   const fileName = "jobs/" + episodeId + "/source/audio.mp3";
   const { error: uploadError } = await supabase.storage
@@ -244,15 +265,17 @@ async function extractAudioWithYtDlp(url: string, supabase: any, bucket: string,
     .upload(fileName, audioBuffer, { contentType: "audio/mpeg", upsert: true });
 
   if (uploadError) {
-    throw new Error("Failed to upload extracted audio to Supabase: " + uploadError.message);
+    throw new Error("Failed to upload extracted audio: " + uploadError.message);
   }
 
   try { unlinkSync(outputPath); } catch {}
 
   const { data: publicData } = supabase.storage.from(bucket).getPublicUrl(fileName);
-  console.log("[YT-DLP] Audio uploaded to Supabase:", publicData.publicUrl);
+  console.log("[YT-DLP] Uploaded to Supabase:", publicData.publicUrl);
   return publicData.publicUrl;
 }
+
+// ─── Audio Merging ───────────────────────────────────────────────────────────
 
 async function mergeAudioChunks(chunkPaths: string[], outputPath: string): Promise<void> {
   console.log("[MERGE] Merging", chunkPaths.length, "chunks into", outputPath);
@@ -278,13 +301,82 @@ async function mergeAudioChunks(chunkPaths: string[], outputPath: string): Promi
     writeNext(0);
   });
 
-  console.log("[MERGE] Merge complete");
+  console.log("[MERGE] Complete");
 }
+
+// ─── Supabase Helpers ────────────────────────────────────────────────────────
+
+async function uploadChunkToSupabase(
+  supabase: any,
+  bucket: string,
+  chunkPath: string,
+  episodeId: string,
+  index: number
+): Promise<string> {
+  const chunkBuffer = readFileSync(chunkPath);
+  const fileName = "jobs/" + episodeId + "/chunks/chunk_" + String(index).padStart(4, "0") + ".mp3";
+
+  const { error } = await supabase.storage
+    .from(bucket)
+    .upload(fileName, chunkBuffer, { contentType: "audio/mpeg", upsert: true });
+
+  if (error) {
+    throw new Error("Chunk upload error (chunk " + index + "): " + error.message);
+  }
+
+  const { data } = supabase.storage.from(bucket).getPublicUrl(fileName);
+  return data.publicUrl;
+}
+
+async function downloadChunkFromSupabase(url: string, localPath: string): Promise<void> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Failed to download chunk from: " + url);
+  const buf = await res.arrayBuffer();
+  writeFileSync(localPath, Buffer.from(buf));
+}
+
+async function deleteChunksFromSupabase(
+  supabase: any,
+  bucket: string,
+  episodeId: string,
+  count: number
+): Promise<void> {
+  const paths = Array.from({ length: count }, (_, i) =>
+    "jobs/" + episodeId + "/chunks/chunk_" + String(i).padStart(4, "0") + ".mp3"
+  );
+  await supabase.storage.from(bucket).remove(paths);
+  console.log("[CLEANUP] Deleted", count, "chunks from Supabase");
+}
+
+async function uploadFinalMergedFile(
+  supabase: any,
+  bucket: string,
+  mergedPath: string,
+  episodeId: string
+): Promise<string> {
+  const mergedBuffer = readFileSync(mergedPath);
+  const fileName = "jobs/" + episodeId + "/final/dubbed_" + Date.now() + ".mp3";
+
+  const { error } = await supabase.storage
+    .from(bucket)
+    .upload(fileName, mergedBuffer, { contentType: "audio/mpeg", upsert: true });
+
+  if (error) {
+    throw new Error("Final upload error: " + error.message);
+  }
+
+  const { data } = supabase.storage.from(bucket).getPublicUrl(fileName);
+  return data.publicUrl;
+}
+
+// ─── Main Task ───────────────────────────────────────────────────────────────
 
 export const podcastOrchestrator = task({
   id: "podcast-orchestrator",
   machine: "medium-1x",
   run: async (payload: any) => {
+
+    // ── Env Vars ──────────────────────────────────────────────────────────────
     const ASSEMBLYAI_API_KEY = process.env.ASSEMBLYAI_API_KEY!;
     const OPENAI_API_KEY = process.env.OPENAI_API_KEY!;
     const ELEVENLABS_API_KEY = process.env.ELEVENLAB_API_KEY!;
@@ -294,49 +386,53 @@ export const podcastOrchestrator = task({
 
     if (!ASSEMBLYAI_API_KEY) throw new Error("Missing ASSEMBLYAI_API_KEY");
     if (!OPENAI_API_KEY) throw new Error("Missing OPENAI_API_KEY");
-    if (!ELEVENLABS_API_KEY) throw new Error("Missing ELEVENLAB_API_KEY");
+    if (!ELEVENLABS_API_KEY) throw new Error("Missing ELEVENLAB_API_KEY (no S)");
     if (!SUPABASE_URL) throw new Error("Missing SUPABASE_URL");
     if (!SUPABASE_KEY) throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY");
     if (!BUCKET) throw new Error("Missing SUPABASE_BUCKET_NAME");
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    console.log("[STEP 1] ROOT TASK ENTERED", payload);
-
-    let audioUrl = payload.audioUrl || "https://storage.googleapis.com/aai-docs-samples/espn.m4a";
-    const targetLanguage = payload.targetLanguage || "Spanish";
+    // ── Payload ───────────────────────────────────────────────────────────────
+    let audioUrl: string = payload.audioUrl || "https://storage.googleapis.com/aai-docs-samples/espn.m4a";
+    const targetLanguage: string = payload.targetLanguage || "Spanish";
+    const previewMode: boolean = payload.previewMode === true;
+    const testMode: boolean = payload.testMode === true;
+    const episodeId: string = payload.episodeId || "test";
     const voicePool = getVoicePool(targetLanguage);
-    const previewMode = payload.previewMode === true;
-    const testMode = payload.testMode === true;
-    const episodeId = payload.episodeId || "test";
 
-    console.log("[STEP 1] TEST MODE:", testMode, "PREVIEW MODE:", previewMode);
-    console.log("[STEP 1] TARGET LANGUAGE:", targetLanguage, "VOICE POOL SIZE:", voicePool.length);
+    console.log("[STEP 1] PIPELINE START");
+    console.log("  episodeId:", episodeId);
+    console.log("  targetLanguage:", targetLanguage);
+    console.log("  testMode:", testMode, "| previewMode:", previewMode);
+    console.log("  voicePool size:", voicePool.length);
 
-    console.log("[STEP 2] CHECKING AUDIO URL:", audioUrl);
+    // ── STEP 2: Resolve Audio URL ─────────────────────────────────────────────
+    console.log("[STEP 2] RESOLVING AUDIO URL:", audioUrl);
 
     if (!isDirectAudioUrl(audioUrl)) {
-      console.log("[STEP 2] NOT A DIRECT AUDIO URL - using yt-dlp to extract");
+      console.log("[STEP 2] Not a direct audio URL — extracting with yt-dlp");
       audioUrl = await extractAudioWithYtDlp(audioUrl, supabase, BUCKET, episodeId);
     } else {
-      console.log("[STEP 2] DIRECT AUDIO URL - skipping yt-dlp");
+      console.log("[STEP 2] Direct audio URL confirmed");
     }
 
-    console.log("[STEP 3] SUBMITTING TO ASSEMBLYAI, TARGET:", targetLanguage, "PREVIEW:", previewMode);
+    // ── STEP 3: Transcribe ────────────────────────────────────────────────────
+    console.log("[STEP 3] SUBMITTING TO ASSEMBLYAI");
 
     const transcriptBody: any = {
       audio_url: audioUrl,
       speech_models: ["universal-2"],
       speaker_labels: true,
-      language_detection: true, // auto-detects Hindi, Spanish, French, any language
+      language_detection: true,
     };
 
     if (previewMode) {
       transcriptBody.audio_end_at = 180000;
-      console.log("[STEP 3] PREVIEW MODE - limiting to first 3 minutes");
+      console.log("[STEP 3] Preview mode — limiting to first 3 minutes");
     }
 
-    const submitResponse = await fetch("https://api.assemblyai.com/v2/transcript", {
+    const submitRes = await fetch("https://api.assemblyai.com/v2/transcript", {
       method: "POST",
       headers: {
         Authorization: ASSEMBLYAI_API_KEY,
@@ -345,49 +441,60 @@ export const podcastOrchestrator = task({
       body: JSON.stringify(transcriptBody),
     });
 
-    const submitJson = await submitResponse.json();
+    const submitJson = await submitRes.json();
     const transcriptId = submitJson.id;
     if (!transcriptId) {
       throw new Error("No transcript ID returned: " + JSON.stringify(submitJson));
     }
 
-    console.log("[STEP 4] POLLING FOR TRANSCRIPT", transcriptId);
+    // ── STEP 4: Poll for Transcript ───────────────────────────────────────────
+    console.log("[STEP 4] POLLING ASSEMBLYAI, ID:", transcriptId);
+
     let transcriptText = "";
     let utterances: any[] = [];
-    let detectedLanguageCode = "en"; // default, overwritten on completion
+    let detectedLanguageCode = "en";
 
     while (true) {
       await new Promise((r) => setTimeout(r, 3000));
-      const pollResponse = await fetch(
+
+      const pollRes = await fetch(
         "https://api.assemblyai.com/v2/transcript/" + transcriptId,
         { headers: { Authorization: ASSEMBLYAI_API_KEY } }
       );
-      const pollJson: any = await pollResponse.json();
-      console.log("[STEP 4.1] POLL STATUS", pollJson.status);
+      const pollJson: any = await pollRes.json();
+      console.log("[STEP 4] Poll status:", pollJson.status);
+
       if (pollJson.status === "completed") {
         transcriptText = pollJson.text;
         utterances = pollJson.utterances || [];
         detectedLanguageCode = pollJson.language_code || "en";
-        console.log("[STEP 4.2] TRANSCRIPT DONE, LENGTH:", transcriptText.length, "UTTERANCES:", utterances.length, "DETECTED LANGUAGE:", detectedLanguageCode);
+        console.log("[STEP 4] Transcript complete");
+        console.log("  length:", transcriptText.length, "chars");
+        console.log("  utterances:", utterances.length);
+        console.log("  detected language:", detectedLanguageCode);
         break;
       }
+
       if (pollJson.status === "error") {
         throw new Error("AssemblyAI error: " + pollJson.error);
       }
     }
 
-    // Build speaker-aware chunks. Fall back to plain text chunking if no utterances came back.
+    // ── STEP 5: Build Speaker Chunks ──────────────────────────────────────────
+    console.log("[STEP 5] BUILDING SPEAKER CHUNKS");
+
     let speakerChunks: SpeakerChunk[];
+
     if (utterances.length > 0) {
-      speakerChunks = buildSpeakerChunks(utterances, 2000);
-      console.log("[STEP 5] BUILT", speakerChunks.length, "SPEAKER-AWARE CHUNKS");
+      speakerChunks = buildSpeakerChunks(utterances, MAX_CHARS_PER_CHUNK);
+      console.log("[STEP 5] Built", speakerChunks.length, "speaker-aware chunks");
     } else {
-      console.log("[STEP 5] NO UTTERANCES — falling back to single-speaker chunking");
-      const fallbackChunks = splitTextIntoChunks(transcriptText, 2000);
+      console.log("[STEP 5] No utterances — falling back to single-speaker chunking");
+      const fallbackChunks = splitTextIntoChunks(transcriptText, MAX_CHARS_PER_CHUNK);
       speakerChunks = fallbackChunks.map((text, i) => ({ speaker: "A", text, start: i }));
     }
 
-    // Assign each unique speaker to a voice from the pool, in order of appearance
+    // Assign each unique speaker a voice from the pool
     const speakerToVoice: Record<string, string> = {};
     let voiceIndex = 0;
     for (const chunk of speakerChunks) {
@@ -396,41 +503,42 @@ export const podcastOrchestrator = task({
         voiceIndex++;
       }
     }
-    console.log("[STEP 5.1] SPEAKER → VOICE ASSIGNMENTS:", speakerToVoice);
+    console.log("[STEP 5] Speaker → Voice assignments:", speakerToVoice);
 
-    console.log("[STEP 5.2] TRANSLATING", speakerChunks.length, "CHUNKS IN PARALLEL (batches of 5)");
+    // ── STEP 6: Translate ─────────────────────────────────────────────────────
+    console.log("[STEP 6] TRANSLATING", speakerChunks.length, "chunks (batches of", TRANSLATION_BATCH_SIZE + ")");
+
     const translatedChunks: SpeakerChunk[] = new Array(speakerChunks.length);
-    const TRANSLATION_BATCH_SIZE = 5;
 
     for (let i = 0; i < speakerChunks.length; i += TRANSLATION_BATCH_SIZE) {
       const batch = speakerChunks.slice(i, i + TRANSLATION_BATCH_SIZE);
-      console.log("[STEP 5.3] TRANSLATING BATCH " + (Math.floor(i / TRANSLATION_BATCH_SIZE) + 1) + " (chunks " + (i + 1) + "-" + Math.min(i + TRANSLATION_BATCH_SIZE, speakerChunks.length) + "/" + speakerChunks.length + ")");
+      const batchNum = Math.floor(i / TRANSLATION_BATCH_SIZE) + 1;
+      const totalBatches = Math.ceil(speakerChunks.length / TRANSLATION_BATCH_SIZE);
+      console.log("[STEP 6] Translating batch", batchNum + "/" + totalBatches);
 
-      const batchResults = await Promise.all(
+      const results = await Promise.all(
         batch.map(async (chunk, batchIdx) => {
-          const translated = await translateChunk(chunk.text, targetLanguage, OPENAI_API_KEY, detectedLanguageCode);
-          return {
-            index: i + batchIdx,
-            chunk: {
-              speaker: chunk.speaker,
-              text: translated,
-              start: chunk.start,
-            },
-          };
+          const translated = await translateChunk(
+            chunk.text,
+            targetLanguage,
+            OPENAI_API_KEY,
+            detectedLanguageCode
+          );
+          return { index: i + batchIdx, chunk: { speaker: chunk.speaker, text: translated, start: chunk.start } };
         })
       );
 
-      for (const result of batchResults) {
-        translatedChunks[result.index] = result.chunk;
+      for (const r of results) {
+        translatedChunks[r.index] = r.chunk;
       }
     }
 
     const translationText = translatedChunks.map(c => "[" + c.speaker + "] " + c.text).join("\n\n");
-    console.log("[STEP 5.4] TRANSLATION DONE, TOTAL CHUNKS:", translatedChunks.length);
+    console.log("[STEP 6] Translation complete,", translatedChunks.length, "chunks");
 
+    // ── TEST MODE: Skip dubbing ───────────────────────────────────────────────
     if (testMode) {
-      console.log("[STEP 6] TEST MODE — skipping ElevenLabs dubbing");
-      console.log("[STEP 7] PIPELINE COMPLETE (TEST MODE)");
+      console.log("[TEST MODE] Skipping ElevenLabs — returning test audio URL");
       return {
         transcript: transcriptText,
         translation: translationText,
@@ -442,21 +550,22 @@ export const podcastOrchestrator = task({
       };
     }
 
-    console.log("[STEP 6] DUBBING", translatedChunks.length, "CHUNKS IN PARALLEL (batches of 5)");
+    // ── STEP 7: Dub Each Chunk ────────────────────────────────────────────────
+    console.log("[STEP 7] DUBBING", translatedChunks.length, "chunks (batches of", DUB_BATCH_SIZE + ")");
 
-    const chunkPaths: string[] = new Array(translatedChunks.length);
-    const DUB_BATCH_SIZE = 5;
+    const localChunkPaths: string[] = new Array(translatedChunks.length);
 
     for (let i = 0; i < translatedChunks.length; i += DUB_BATCH_SIZE) {
       const batch = translatedChunks.slice(i, i + DUB_BATCH_SIZE);
-      console.log("[STEP 6.1] DUBBING BATCH " + (Math.floor(i / DUB_BATCH_SIZE) + 1) + " (chunks " + (i + 1) + "-" + Math.min(i + DUB_BATCH_SIZE, translatedChunks.length) + "/" + translatedChunks.length + ")");
+      const batchNum = Math.floor(i / DUB_BATCH_SIZE) + 1;
+      const totalBatches = Math.ceil(translatedChunks.length / DUB_BATCH_SIZE);
+      console.log("[STEP 7] Dubbing batch", batchNum + "/" + totalBatches);
 
-      const batchResults = await Promise.all(
+      const results = await Promise.all(
         batch.map(async (chunk, batchIdx) => {
           const absoluteIndex = i + batchIdx;
           const voiceId = speakerToVoice[chunk.speaker];
-          console.log("[STEP 6.2] DUBBING CHUNK " + (absoluteIndex + 1) + " (speaker " + chunk.speaker + " → " + voiceId + ")");
-
+          console.log("  Chunk", (absoluteIndex + 1) + "/" + translatedChunks.length, "| speaker:", chunk.speaker, "→ voice:", voiceId);
           const buf = await dubChunk(chunk.text, voiceId, ELEVENLABS_API_KEY);
           const chunkPath = "/tmp/chunk_" + episodeId + "_" + absoluteIndex + ".mp3";
           writeFileSync(chunkPath, Buffer.from(buf));
@@ -464,40 +573,65 @@ export const podcastOrchestrator = task({
         })
       );
 
-      for (const result of batchResults) {
-        chunkPaths[result.index] = result.path;
+      for (const r of results) {
+        localChunkPaths[r.index] = r.path;
       }
     }
 
-    console.log("[STEP 7] MERGING CHUNKS");
+    console.log("[STEP 7] All", localChunkPaths.length, "chunks dubbed");
+
+    // ── STEP 8: Upload Each Chunk to Supabase ─────────────────────────────────
+    // Upload chunks individually (each is small, well under 50MB limit)
+    console.log("[STEP 8] UPLOADING", localChunkPaths.length, "chunks to Supabase individually");
+
+    const supabaseChunkUrls: string[] = [];
+
+    for (let i = 0; i < localChunkPaths.length; i++) {
+      const url = await uploadChunkToSupabase(supabase, BUCKET, localChunkPaths[i], episodeId, i);
+      supabaseChunkUrls.push(url);
+      console.log("[STEP 8] Uploaded chunk", (i + 1) + "/" + localChunkPaths.length);
+
+      // Delete local temp file immediately after upload to save /tmp space
+      try { unlinkSync(localChunkPaths[i]); } catch {}
+    }
+
+    console.log("[STEP 8] All chunks uploaded to Supabase");
+
+    // ── STEP 9: Download Chunks and Merge ─────────────────────────────────────
+    console.log("[STEP 9] DOWNLOADING CHUNKS FOR MERGE");
+
+    const redownloadedPaths: string[] = [];
+
+    for (let i = 0; i < supabaseChunkUrls.length; i++) {
+      const localPath = "/tmp/redownload_" + episodeId + "_" + i + ".mp3";
+      await downloadChunkFromSupabase(supabaseChunkUrls[i], localPath);
+      redownloadedPaths.push(localPath);
+      console.log("[STEP 9] Downloaded chunk", (i + 1) + "/" + supabaseChunkUrls.length);
+    }
+
+    console.log("[STEP 9] Merging all chunks into single MP3");
     const mergedPath = "/tmp/merged_" + episodeId + ".mp3";
-    await mergeAudioChunks(chunkPaths, mergedPath);
+    await mergeAudioChunks(redownloadedPaths, mergedPath);
 
-    for (const chunkPath of chunkPaths) {
-      try { unlinkSync(chunkPath); } catch {}
+    // Clean up redownloaded temp files
+    for (const p of redownloadedPaths) {
+      try { unlinkSync(p); } catch {}
     }
 
-    console.log("[STEP 8] UPLOADING MERGED FILE TO SUPABASE");
-    const mergedBuffer = readFileSync(mergedPath);
-    const fileName = "jobs/" + episodeId + "/final/dubbed_" + Date.now() + ".mp3";
+    // ── STEP 10: Upload Final Merged File ─────────────────────────────────────
+    console.log("[STEP 10] UPLOADING FINAL MERGED FILE TO SUPABASE");
 
-    const { error: uploadError } = await supabase.storage
-      .from(BUCKET)
-      .upload(fileName, mergedBuffer, {
-        contentType: "audio/mpeg",
-        upsert: true,
-      });
-
-    if (uploadError) {
-      throw new Error("Supabase upload error: " + uploadError.message);
-    }
-
+    const finalAudioUrl = await uploadFinalMergedFile(supabase, BUCKET, mergedPath, episodeId);
     try { unlinkSync(mergedPath); } catch {}
 
-    const { data: publicData } = supabase.storage.from(BUCKET).getPublicUrl(fileName);
-    const finalAudioUrl = publicData.publicUrl;
-    console.log("[STEP 8.1] UPLOADED:", finalAudioUrl);
-    console.log("[STEP 9] PIPELINE COMPLETE");
+    console.log("[STEP 10] Final file uploaded:", finalAudioUrl);
+
+    // ── STEP 11: Delete Individual Chunks from Supabase ──────────────────────
+    console.log("[STEP 11] CLEANING UP CHUNKS FROM SUPABASE");
+    await deleteChunksFromSupabase(supabase, BUCKET, episodeId, localChunkPaths.length);
+
+    // ── DONE ──────────────────────────────────────────────────────────────────
+    console.log("[DONE] PIPELINE COMPLETE");
 
     return {
       transcript: transcriptText,
