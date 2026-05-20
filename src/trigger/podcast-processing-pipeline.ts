@@ -1,7 +1,7 @@
 import { task } from "@trigger.dev/sdk/v3";
 import { createClient } from "@supabase/supabase-js";
 import { execSync } from "child_process";
-import { existsSync, readFileSync, unlinkSync, writeFileSync, createWriteStream } from "fs";
+import { existsSync, readFileSync, unlinkSync, writeFileSync } from "fs";
 import { join } from "path";
 
 // ─── Voice Pools ─────────────────────────────────────────────────────────────
@@ -275,35 +275,6 @@ async function extractAudioWithYtDlp(
   return publicData.publicUrl;
 }
 
-// ─── Audio Merging ───────────────────────────────────────────────────────────
-
-async function mergeAudioChunks(chunkPaths: string[], outputPath: string): Promise<void> {
-  console.log("[MERGE] Merging", chunkPaths.length, "chunks into", outputPath);
-
-  const writeStream = createWriteStream(outputPath);
-
-  await new Promise<void>((resolve, reject) => {
-    writeStream.on("finish", resolve);
-    writeStream.on("error", reject);
-
-    const writeNext = (index: number) => {
-      if (index >= chunkPaths.length) {
-        writeStream.end();
-        return;
-      }
-      const chunk = readFileSync(chunkPaths[index]);
-      writeStream.write(chunk, (err) => {
-        if (err) reject(err);
-        else writeNext(index + 1);
-      });
-    };
-
-    writeNext(0);
-  });
-
-  console.log("[MERGE] Complete");
-}
-
 // ─── Supabase Helpers ────────────────────────────────────────────────────────
 
 async function uploadChunkToSupabase(
@@ -322,47 +293,6 @@ async function uploadChunkToSupabase(
 
   if (error) {
     throw new Error("Chunk upload error (chunk " + index + "): " + error.message);
-  }
-
-  const { data } = supabase.storage.from(bucket).getPublicUrl(fileName);
-  return data.publicUrl;
-}
-
-async function downloadChunkFromSupabase(url: string, localPath: string): Promise<void> {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error("Failed to download chunk from: " + url);
-  const buf = await res.arrayBuffer();
-  writeFileSync(localPath, Buffer.from(buf));
-}
-
-async function deleteChunksFromSupabase(
-  supabase: any,
-  bucket: string,
-  episodeId: string,
-  count: number
-): Promise<void> {
-  const paths = Array.from({ length: count }, (_, i) =>
-    "jobs/" + episodeId + "/chunks/chunk_" + String(i).padStart(4, "0") + ".mp3"
-  );
-  await supabase.storage.from(bucket).remove(paths);
-  console.log("[CLEANUP] Deleted", count, "chunks from Supabase");
-}
-
-async function uploadFinalMergedFile(
-  supabase: any,
-  bucket: string,
-  mergedPath: string,
-  episodeId: string
-): Promise<string> {
-  const mergedBuffer = readFileSync(mergedPath);
-  const fileName = "jobs/" + episodeId + "/final/dubbed_" + Date.now() + ".mp3";
-
-  const { error } = await supabase.storage
-    .from(bucket)
-    .upload(fileName, mergedBuffer, { contentType: "audio/mpeg", upsert: true });
-
-  if (error) {
-    throw new Error("Final upload error: " + error.message);
   }
 
   const { data } = supabase.storage.from(bucket).getPublicUrl(fileName);
@@ -581,8 +511,9 @@ export const podcastOrchestrator = task({
     console.log("[STEP 7] All", localChunkPaths.length, "chunks dubbed");
 
     // ── STEP 8: Upload Each Chunk to Supabase ─────────────────────────────────
-    // Upload chunks individually (each is small, well under 50MB limit)
-    console.log("[STEP 8] UPLOADING", localChunkPaths.length, "chunks to Supabase individually");
+    // Each chunk is small (well under 50MB) — no size limit issues
+    // Chunks stay in Supabase permanently; frontend merges them client-side on download
+    console.log("[STEP 8] UPLOADING", localChunkPaths.length, "chunks to Supabase");
 
     const supabaseChunkUrls: string[] = [];
 
@@ -590,56 +521,21 @@ export const podcastOrchestrator = task({
       const url = await uploadChunkToSupabase(supabase, BUCKET, localChunkPaths[i], episodeId, i);
       supabaseChunkUrls.push(url);
       console.log("[STEP 8] Uploaded chunk", (i + 1) + "/" + localChunkPaths.length);
-
       // Delete local temp file immediately after upload to save /tmp space
       try { unlinkSync(localChunkPaths[i]); } catch {}
     }
 
-    console.log("[STEP 8] All chunks uploaded to Supabase");
-
-    // ── STEP 9: Download Chunks and Merge ─────────────────────────────────────
-    console.log("[STEP 9] DOWNLOADING CHUNKS FOR MERGE");
-
-    const redownloadedPaths: string[] = [];
-
-    for (let i = 0; i < supabaseChunkUrls.length; i++) {
-      const localPath = "/tmp/redownload_" + episodeId + "_" + i + ".mp3";
-      await downloadChunkFromSupabase(supabaseChunkUrls[i], localPath);
-      redownloadedPaths.push(localPath);
-      console.log("[STEP 9] Downloaded chunk", (i + 1) + "/" + supabaseChunkUrls.length);
-    }
-
-    console.log("[STEP 9] Merging all chunks into single MP3");
-    const mergedPath = "/tmp/merged_" + episodeId + ".mp3";
-    await mergeAudioChunks(redownloadedPaths, mergedPath);
-
-    // Clean up redownloaded temp files
-    for (const p of redownloadedPaths) {
-      try { unlinkSync(p); } catch {}
-    }
-
-    // ── STEP 10: Upload Final Merged File ─────────────────────────────────────
-    console.log("[STEP 10] UPLOADING FINAL MERGED FILE TO SUPABASE");
-
-    const finalAudioUrl = await uploadFinalMergedFile(supabase, BUCKET, mergedPath, episodeId);
-    try { unlinkSync(mergedPath); } catch {}
-
-    console.log("[STEP 10] Final file uploaded:", finalAudioUrl);
-
-    // ── STEP 11: Delete Individual Chunks from Supabase ──────────────────────
-    console.log("[STEP 11] CLEANING UP CHUNKS FROM SUPABASE");
-    await deleteChunksFromSupabase(supabase, BUCKET, episodeId, localChunkPaths.length);
-
-    // ── DONE ──────────────────────────────────────────────────────────────────
-    console.log("[DONE] PIPELINE COMPLETE");
+    // ── DONE ─────────────────────────────────────────────────────────────────
+    // Return all chunk URLs — frontend will fetch and concatenate into one MP3 on download
+    console.log("[DONE] PIPELINE COMPLETE —", supabaseChunkUrls.length, "chunks ready");
 
     return {
       transcript: transcriptText,
       translation: translationText,
       speaker_assignments: speakerToVoice,
       detected_language: detectedLanguageCode,
-      final_audio_url: finalAudioUrl,
-      audio_chunks: [finalAudioUrl],
+      final_audio_url: supabaseChunkUrls[0], // first chunk as fallback
+      audio_chunks: supabaseChunkUrls,        // all chunks for client-side merge
     };
   },
 });
