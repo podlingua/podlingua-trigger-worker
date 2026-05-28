@@ -3,33 +3,42 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Restore — Surface Care Specialists</title>
+  <title>Restore Surface Care — Stone, Tile &amp; Specialty Surface Restoration</title>
   <link rel="stylesheet" href="style.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Open+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400&family=Open+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 </head>
 <body>
 
-  <!-- TOP BAR -->
-  <div class="topbar">
-    <div class="container topbar__inner">
-      <span>📞 (555) 123-4567</span>
-      <span>✉ info@restoresurfacecare.com</span>
-    </div>
-  </div>
-
-  <!-- HEADER / NAV -->
+  <!-- ===== HEADER ===== -->
   <header class="header" id="header">
-    <div class="container header__inner">
+    <div class="header__inner container">
+
       <a href="index.html" class="logo">
-        <span class="logo__icon">✦</span>
-        <span class="logo__text">RESTORE</span>
-        <span class="logo__sub">Surface Care</span>
+        <div class="logo__badge">
+          <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <circle cx="30" cy="30" r="30" fill="#1a1a1a"/>
+            <ellipse cx="30" cy="43" rx="20" ry="3.5" stroke="#C89B4C" stroke-width="1.5" fill="none"/>
+            <circle cx="30" cy="14" r="5" fill="#C89B4C"/>
+            <path d="M24 22 Q30 18 36 22 L37 35 H23 Z" fill="#C89B4C"/>
+            <path d="M23 35 L21 46" stroke="#C89B4C" stroke-width="2.5" stroke-linecap="round"/>
+            <path d="M37 35 L39 46" stroke="#C89B4C" stroke-width="2.5" stroke-linecap="round"/>
+            <rect x="25" y="37" width="10" height="4" rx="1.5" fill="#C89B4C"/>
+            <line x1="30" y1="41" x2="30" y2="46" stroke="#C89B4C" stroke-width="2"/>
+            <ellipse cx="30" cy="47" rx="5" ry="2" fill="#C89B4C" opacity="0.6"/>
+          </svg>
+        </div>
+        <div class="logo__labels">
+          <span class="logo__name">RESTORE</span>
+          <span class="logo__tagline">— SURFACE CARE —</span>
+        </div>
       </a>
+
       <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation" aria-expanded="false">
         <span></span><span></span><span></span>
       </button>
+
       <nav class="nav" id="nav" aria-label="Main navigation">
         <ul class="nav__list">
           <li class="nav__item nav__item--active"><a href="index.html">Home</a></li>
@@ -43,7 +52,7 @@
           </li>
           <li class="nav__item nav__item--dropdown">
             <a href="services.html">Services <span class="nav__arrow">▾</span></a>
-            <ul class="dropdown dropdown--wide">
+            <ul class="dropdown dropdown--mega">
               <li class="dropdown__col">
                 <span class="dropdown__heading">Natural Stone Services</span>
                 <ul>
@@ -57,17 +66,17 @@
                 </ul>
               </li>
               <li class="dropdown__col">
-                <span class="dropdown__heading">Tile, Concrete &amp; Engineered</span>
+                <span class="dropdown__heading">Tile, Concrete &amp; Engineered Surfaces</span>
                 <ul>
                   <li><a href="services.html#terrazzo">Terrazzo Restoration</a></li>
                   <li><a href="services.html#concrete">Concrete Restoration</a></li>
                   <li><a href="services.html#concrete-prep">Concrete Floor Prep</a></li>
                   <li><a href="services.html#tile-grout">Tile and Grout Cleaning</a></li>
-                  <li><a href="services.html#quartz">Quartz (Engineered Stone)</a></li>
+                  <li><a href="services.html#quartz">Quartz (Engineered Stone) Restoration</a></li>
                 </ul>
               </li>
               <li class="dropdown__col">
-                <span class="dropdown__heading">Commercial &amp; Specialty</span>
+                <span class="dropdown__heading">Commercial &amp; Specialty Services</span>
                 <ul>
                   <li><a href="services.html#vct">Commercial VCT Strip &amp; Wax</a></li>
                   <li><a href="services.html#commercial-maintenance">Commercial Maintenance</a></li>
@@ -81,270 +90,480 @@
             <ul class="dropdown">
               <li><a href="our-work.html">Photo Gallery</a></li>
               <li><a href="our-work.html#before-after">Before &amp; After</a></li>
+              <li><a href="our-work.html#case-studies">Case Studies</a></li>
             </ul>
           </li>
           <li class="nav__item"><a href="reviews.html">Reviews</a></li>
-          <li class="nav__item nav__item--dropdown">
-            <a href="learn.html">Learn <span class="nav__arrow">▾</span></a>
-            <ul class="dropdown">
-              <li><a href="learn.html">Blog</a></li>
-              <li><a href="learn.html#faq">FAQ</a></li>
-              <li><a href="learn.html#care-guides">Care Guides</a></li>
-            </ul>
-          </li>
           <li class="nav__item"><a href="service-areas.html">Service Areas</a></li>
-          <li class="nav__item"><a href="contact.html" class="nav__cta">Contact Us</a></li>
+          <li class="nav__item nav__section-label"><span>Resources</span></li>
+          <li class="nav__item"><a href="learn.html#care-guides">Stone Care Guides</a></li>
+          <li class="nav__item"><a href="learn.html#faq">Stone Restoration Faqs</a></li>
+          <li class="nav__item"><a href="learn.html#surface-iq">Surface IQ Guide</a></li>
+          <li class="nav__item"><a href="learn.html#ask-expert">Ask-The-Expert</a></li>
+          <li class="nav__item"><a href="learn.html#products">Cleaning Products</a></li>
         </ul>
       </nav>
     </div>
   </header>
 
-  <!-- HERO -->
+  <!-- ===== HERO ===== -->
   <section class="hero">
     <div class="hero__overlay"></div>
-    <div class="container hero__inner">
-      <p class="hero__eyebrow">Professional Surface Restoration</p>
-      <h1 class="hero__title">Bringing Your Surfaces<br/>Back to Life</h1>
+    <div class="container hero__content">
+      <p class="hero__eyebrow">Premium Stone Restoration Experts</p>
+      <h1 class="hero__title">
+        Restore Your<br/>
+        <span class="hero__title--gold">Stone Surfaces</span><br/>
+        To Like-New Perfection
+      </h1>
       <p class="hero__sub">
-        Expert restoration and maintenance for natural stone, tile, concrete, and more.
-        Trusted by homeowners and businesses across the region.
+        Expert restoration for marble, terrazzo, travertine, granite, and concrete surfaces
+        — trusted across the region for precision, care, and lasting results.
       </p>
-      <div class="hero__actions">
-        <a href="contact.html" class="btn btn--gold">Get a Free Estimate</a>
-        <a href="services.html" class="btn btn--outline">View Our Services</a>
+      <div class="hero__btns">
+        <a href="contact.html" class="btn btn--gold btn--full">Request Free Evaluation</a>
+        <a href="tel:5551234567" class="btn btn--outline-white btn--full">
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="flex-shrink:0"><path d="M3 4h3l1.5 3.5-1.5 1.5a11 11 0 005 5l1.5-1.5L17 14v3a1 1 0 01-1 1A15 15 0 012 3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Call or Text (555) 123-4567
+        </a>
       </div>
     </div>
   </section>
 
-  <!-- TRUST BAR -->
-  <div class="trustbar">
-    <div class="container trustbar__inner">
-      <div class="trust-item">
-        <span class="trust-item__num">15+</span>
-        <span class="trust-item__label">Years Experience</span>
-      </div>
-      <div class="trust-divider"></div>
-      <div class="trust-item">
-        <span class="trust-item__num">2,500+</span>
-        <span class="trust-item__label">Projects Completed</span>
-      </div>
-      <div class="trust-divider"></div>
-      <div class="trust-item">
-        <span class="trust-item__num">500+</span>
-        <span class="trust-item__label">Five-Star Reviews</span>
-      </div>
-      <div class="trust-divider"></div>
-      <div class="trust-item">
-        <span class="trust-item__num">100%</span>
-        <span class="trust-item__label">Satisfaction Guarantee</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- SERVICES OVERVIEW -->
-  <section class="section services-overview">
+  <!-- ===== STATS ===== -->
+  <section class="stats-section">
     <div class="container">
-      <p class="section__eyebrow">What We Do</p>
-      <h2 class="section__title">Choose the service that best fits your needs.</h2>
-      <div class="services-grid">
-
-        <div class="service-card">
-          <div class="service-card__icon">◈</div>
-          <h3 class="service-card__title">Natural Stone</h3>
-          <p class="service-card__text">Marble, granite, travertine, limestone, quartzite, slate, and soapstone — restored to a clean, even finish.</p>
-          <a href="services.html#natural-stone" class="service-card__link">Learn more →</a>
+      <div class="stats-card">
+        <div class="stats-grid">
+          <div class="stat-box">
+            <span class="stat-box__num">Since 2019</span>
+            <span class="stat-box__label">Serving Houston</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-box__num">15+ Years</span>
+            <span class="stat-box__label">Combined Experience</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-box__num">140+</span>
+            <span class="stat-box__label">5-Star Reviews</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-box__num">100%</span>
+            <span class="stat-box__label">Satisfaction Focus</span>
+          </div>
         </div>
-
-        <div class="service-card">
-          <div class="service-card__icon">⬡</div>
-          <h3 class="service-card__title">Tile &amp; Grout</h3>
-          <p class="service-card__text">Dirty grout lines and tired tile restored to a clean, uniform look. We bring back the original beauty of your floors.</p>
-          <a href="services.html#tile-grout" class="service-card__link">Learn more →</a>
-        </div>
-
-        <div class="service-card">
-          <div class="service-card__icon">▣</div>
-          <h3 class="service-card__title">Concrete &amp; Terrazzo</h3>
-          <p class="service-card__text">Worn, stained, or cracked concrete and terrazzo refined into a clean, finished surface ready for use.</p>
-          <a href="services.html#concrete" class="service-card__link">Learn more →</a>
-        </div>
-
-        <div class="service-card">
-          <div class="service-card__icon">✦</div>
-          <h3 class="service-card__title">Commercial Services</h3>
-          <p class="service-card__text">VCT strip &amp; wax, ongoing maintenance programs, and specialty services for commercial properties of any size.</p>
-          <a href="services.html#commercial" class="service-card__link">Learn more →</a>
-        </div>
-
       </div>
-      <div class="section__cta">
-        <a href="services.html" class="btn btn--gold">View All Services</a>
+    </div>
+    <div class="wave-divider" aria-hidden="true">
+      <svg viewBox="0 0 1440 80" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M0,40 C240,80 480,0 720,40 C960,80 1200,0 1440,40 L1440,80 L0,80 Z" fill="#C89B4C"/>
+      </svg>
+    </div>
+  </section>
+
+  <!-- ===== EXPERIENCE / VIDEO (gold bg) ===== -->
+  <section class="experience-section">
+    <div class="container experience-section__inner">
+      <p class="eyebrow eyebrow--light-spaced">Experience Restore Surface Care</p>
+      <h2 class="heading heading--white">
+        Let us show you how<br/>Restore approaches stone restoration
+      </h2>
+      <p class="body-text body-text--white">
+        A closer look at how we restore and protect natural stone using proven methods,
+        precision craftsmanship, and surface-safe techniques.
+      </p>
+      <a href="our-work.html#video" class="btn btn--outline-white-gold">
+        Watch our stone restoration process &nbsp;▶
+      </a>
+      <div class="video-placeholder">
+        <div class="video-placeholder__inner">
+          <div class="play-btn" aria-label="Play video">▶</div>
+          <p>Stone Restoration Process Video</p>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- WHY CHOOSE US -->
-  <section class="section why-us">
-    <div class="container why-us__inner">
-      <div class="why-us__text">
-        <p class="section__eyebrow">Why Restore</p>
-        <h2 class="section__title">The region's most trusted surface care specialists</h2>
-        <p class="why-us__body">
-          We don't just clean surfaces — we restore them. Every technician on our team is trained, certified, and equipped with professional-grade tools to deliver a result that lasts. We work on residential and commercial properties, and we stand behind every job we do.
+  <!-- ===== ABOUT CARD (light bg) ===== -->
+  <section class="about-section">
+    <div class="container">
+      <div class="about-card">
+        <h2 class="about-card__title">Expert Stone Restoration<br/>Property Owners Trust</h2>
+        <p class="about-card__text">
+          Restore Surface Care specializes in restoring, protecting, and maintaining natural stone and specialty surfaces for residential and commercial properties. From marble and terrazzo to concrete, tile, and engineered stone, we focus on precision craftsmanship, surface-safe methods, and results that last.
         </p>
-        <ul class="why-list">
-          <li class="why-list__item">
-            <span class="why-list__icon">✔</span>
-            Certified and insured technicians
-          </li>
-          <li class="why-list__item">
-            <span class="why-list__icon">✔</span>
-            No subcontractors — our crew, every time
-          </li>
-          <li class="why-list__item">
-            <span class="why-list__icon">✔</span>
-            Free, no-obligation estimates
-          </li>
-          <li class="why-list__item">
-            <span class="why-list__icon">✔</span>
-            Satisfaction guaranteed on every project
-          </li>
-          <li class="why-list__item">
-            <span class="why-list__icon">✔</span>
-            Eco-friendly products and processes
-          </li>
+        <p class="about-card__text">
+          Every project begins with a careful evaluation so the right solution is applied — no shortcuts, no unnecessary services, just expert care tailored to your surface.
+        </p>
+        <a href="about.html" class="btn btn--gold">Learn About Our Approach</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SERVICES (dark stone bg) ===== -->
+  <section class="services-section">
+    <div class="container">
+      <p class="eyebrow eyebrow--gold-spaced">Stone and Surface Services</p>
+      <h2 class="heading heading--white heading--center">
+        Professional Stone Restoration &amp;<br/>Surface Care Services
+      </h2>
+      <p class="body-text body-text--muted body-text--center">
+        From residential homes to commercial properties, we provide expert restoration, cleaning, and stone surface care services tailored to your specific material and condition.
+      </p>
+
+      <div class="service-cards">
+
+        <div class="service-card-img">
+          <div class="service-card-img__photo service-card-img__photo--marble"></div>
+          <div class="service-card-img__body">
+            <h3>Marble Restoration</h3>
+            <p>Fix dull, scratched, or stained marble with expert marble polishing and restoration that restores the beauty and shine of your floors and surfaces.</p>
+            <a href="services.html#marble" class="btn btn--gold btn--full">View Marble Restoration</a>
+          </div>
+        </div>
+
+        <div class="service-card-img">
+          <div class="service-card-img__photo service-card-img__photo--travertine"></div>
+          <div class="service-card-img__body">
+            <h3>Travertine Restoration</h3>
+            <p>Repair worn, pitted, or soiled travertine with professional travertine restoration that fills holes, smooths rough areas, &amp; refreshes the appearance.</p>
+            <a href="services.html#travertine" class="btn btn--gold btn--full">View Travertine Restoration</a>
+          </div>
+        </div>
+
+        <div class="service-card-img">
+          <div class="service-card-img__photo service-card-img__photo--terrazzo"></div>
+          <div class="service-card-img__body">
+            <h3>Terrazzo Restoration</h3>
+            <p>Bring faded or cloudy terrazzo back to life with professional terrazzo restoration that improves clarity, shine, and overall floor consistency.</p>
+            <a href="services.html#terrazzo" class="btn btn--gold btn--full">View Terrazzo Restoration</a>
+          </div>
+        </div>
+
+        <div class="service-card-img">
+          <div class="service-card-img__photo service-card-img__photo--granite"></div>
+          <div class="service-card-img__body">
+            <h3>Granite Restoration</h3>
+            <p>Refresh worn or dull granite with professional granite restoration that restores clarity, enhances appearance, and helps protect surfaces long-term.</p>
+            <a href="services.html#granite" class="btn btn--gold btn--full">View Granite Restoration</a>
+          </div>
+        </div>
+
+        <div class="service-card-img">
+          <div class="service-card-img__photo service-card-img__photo--tile"></div>
+          <div class="service-card-img__body">
+            <h3>Tile &amp; Grout Cleaning</h3>
+            <p>Improve the look of tile and grout with professional cleaning that lifts built-up dirt and restores a cleaner, brighter look.</p>
+            <a href="services.html#tile-grout" class="btn btn--gold btn--full">View Tile &amp; Grout Cleaning</a>
+          </div>
+        </div>
+
+        <div class="service-card-img">
+          <div class="service-card-img__photo service-card-img__photo--concrete"></div>
+          <div class="service-card-img__body">
+            <h3>Concrete Restoration</h3>
+            <p>Improve dull or worn concrete floors with professional concrete restoration that creates a smoother, cleaner, and more durable finish.</p>
+            <a href="services.html#concrete" class="btn btn--gold btn--full">View Concrete Restoration</a>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="section-cta">
+        <a href="services.html" class="btn btn--gold btn--lg btn--rounded-full btn--full-mobile">Explore All Services</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== BEFORE & AFTER (light bg) ===== -->
+  <section class="before-after-section">
+    <div class="container">
+      <h2 class="heading heading--dark heading--center">Real Transformations.<br/>Lasting Results.</h2>
+      <p class="body-text body-text--gray body-text--center">
+        See how professional restoration brings worn stone surfaces back to a clean, polished, like-new appearance.
+      </p>
+
+      <div class="ba-cards">
+
+        <div class="ba-card">
+          <div class="ba-card__images">
+            <div class="ba-img ba-img--marble-before"></div>
+            <div class="ba-img ba-img--marble-after"></div>
+          </div>
+          <div class="ba-card__caption">Marble Floors Restored to a Clean, Polished Look</div>
+        </div>
+
+        <div class="ba-card">
+          <div class="ba-card__images">
+            <div class="ba-img ba-img--travertine-before"></div>
+            <div class="ba-img ba-img--travertine-after"></div>
+          </div>
+          <div class="ba-card__caption">Travertine Floors Restored to an Even Polished Finish</div>
+        </div>
+
+        <div class="ba-card">
+          <div class="ba-card__images">
+            <div class="ba-img ba-img--terrazzo-before"></div>
+            <div class="ba-img ba-img--terrazzo-after"></div>
+          </div>
+          <div class="ba-card__caption">Terrazzo Floors Restored to a Bright, Polished Finish</div>
+        </div>
+
+      </div>
+
+      <div class="ba-btns">
+        <a href="our-work.html#before-after" class="btn btn--gold btn--lg btn--rounded-full btn--full-mobile">View More Before &amp; After Images</a>
+        <a href="our-work.html#case-studies" class="btn btn--outline-gold btn--lg btn--rounded-full btn--full-mobile">View More Case Studies</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== REVIEWS (light gray bg) ===== -->
+  <section class="reviews-section">
+    <div class="container">
+      <div class="google-badge">
+        <div class="google-badge__logo">
+          <span style="color:#4285F4">G</span><span style="color:#EA4335">o</span><span style="color:#FBBC05">o</span><span style="color:#4285F4">g</span><span style="color:#34A853">l</span><span style="color:#EA4335">e</span>
+        </div>
+        <div class="google-badge__info">
+          <div class="google-badge__rating">
+            <strong>5.0</strong>
+            <span class="stars">★★★★★</span>
+          </div>
+          <div class="google-badge__label"><strong>Top Rated Service 2026</strong></div>
+          <span class="trustindex-badge">✓ Verified by Trustindex</span>
+        </div>
+      </div>
+
+      <p class="eyebrow eyebrow--gold-spaced eyebrow--center">Customer Stories</p>
+      <h2 class="heading heading--dark heading--center">Hear From Customers Who<br/>Chose Restore Surface Care</h2>
+      <p class="body-text body-text--gray body-text--center">
+        Real experiences from homeowners and businesses who trusted Restore with their stone and surface restoration.
+      </p>
+
+      <div class="review-cards">
+        <div class="review-card">
+          <div class="review-card__video-thumb">
+            <div class="play-overlay">
+              <div class="play-overlay__text">
+                <span>HIT <span style="color:#C89B4C">PLAY</span></span>
+                <small>to Hear What Our Customers Say!</small>
+                <div class="stars" style="color:#C89B4C">★★★★★</div>
+              </div>
+              <button class="play-btn-lg" aria-label="Play testimonial video">▶</button>
+            </div>
+          </div>
+        </div>
+        <div class="review-card">
+          <div class="review-card__video-thumb review-card__video-thumb--2">
+            <div class="play-overlay">
+              <span>HIT <span style="color:#C89B4C">PLAY</span></span>
+              <button class="play-btn-lg" aria-label="Play testimonial video">▶</button>
+            </div>
+          </div>
+        </div>
+        <div class="review-card review-card--text">
+          <div class="review-card__header">
+            <div class="review-card__avatar">E</div>
+            <div>
+              <strong>Evelyn MacKay</strong>
+              <span class="review-card__meta">1 week ago</span>
+            </div>
+            <div class="google-g">G</div>
+          </div>
+          <div class="stars" style="color:#C89B4C; font-size:18px; margin-bottom:10px">★★★★★ <span style="color:#4285F4; font-size:14px">✓</span></div>
+          <p class="review-card__quote">"The team was so great! We had a 'small' area but it was a big project and took a lot of work to get right. Very happy with the results."</p>
+        </div>
+      </div>
+
+      <div class="section-cta">
+        <a href="reviews.html" class="btn btn--gold btn--lg btn--rounded-full btn--full-mobile">Read More Reviews</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SERVICE COVERAGE (off-white) ===== -->
+  <section class="coverage-section">
+    <div class="container coverage-section__inner">
+      <div class="coverage-section__text">
+        <p class="eyebrow eyebrow--gold-spaced">Service Coverage</p>
+        <h2 class="heading heading--dark">Service Coverage for<br/>Greater Houston</h2>
+        <p class="body-text body-text--gray">
+          We proudly serve homeowners and businesses throughout Greater Houston, delivering consistent, high-quality stone and surface restoration services across residential and commercial properties.
+        </p>
+        <hr class="gold-rule" />
+        <ul class="area-list">
+          <li><span class="area-check">✔</span> Spring</li>
+          <li><span class="area-check">✔</span> The Woodlands</li>
+          <li><span class="area-check">✔</span> Tomball</li>
+          <li><span class="area-check">✔</span> Magnolia</li>
+          <li><span class="area-check">✔</span> Humble</li>
+          <li><span class="area-check">✔</span> Cypress</li>
+          <li><span class="area-check">✔</span> Houston</li>
+          <li><span class="area-check">✔</span> Memorial</li>
+          <li><span class="area-check">✔</span> Katy</li>
+          <li><span class="area-check">✔</span> Conroe</li>
         </ul>
-        <a href="about.html" class="btn btn--gold">About Our Team</a>
-      </div>
-      <div class="why-us__image">
-        <div class="why-us__img-placeholder">
-          <span>Before &amp; After</span>
-        </div>
+        <a href="service-areas.html" class="btn btn--gold btn--rounded-full">See All Service Areas</a>
       </div>
     </div>
   </section>
 
-  <!-- PROCESS -->
-  <section class="section process">
+  <!-- ===== HELPFUL RESOURCES (cream bg) ===== -->
+  <section class="resources-section">
     <div class="container">
-      <p class="section__eyebrow">How It Works</p>
-      <h2 class="section__title">Our simple 4-step process</h2>
-      <div class="process__steps">
-        <div class="process-step">
-          <div class="process-step__num">01</div>
-          <h3>Free Estimate</h3>
-          <p>We assess your surfaces and provide a clear, honest quote with no hidden fees.</p>
+      <h2 class="heading heading--dark heading--center">Helpful Resources</h2>
+      <p class="body-text body-text--gray body-text--center">
+        Expert guidance, care insights, and answers to help you protect and extend the life of your stone and surfaces.
+      </p>
+      <div class="resource-cards">
+        <div class="resource-card">
+          <div class="resource-card__img resource-card__img--articles"></div>
+          <div class="resource-card__body">
+            <h3>Stone Restoration Articles</h3>
+            <p>Articles and expert insights on restoring, maintaining, and protecting natural stone surfaces.</p>
+            <a href="learn.html#articles" class="btn btn--gold btn--sm btn--full">View Stone Related Articles</a>
+          </div>
         </div>
-        <div class="process-step__connector"></div>
-        <div class="process-step">
-          <div class="process-step__num">02</div>
-          <h3>Custom Plan</h3>
-          <p>We develop a tailored restoration plan specific to your surface type and condition.</p>
+        <div class="resource-card">
+          <div class="resource-card__img resource-card__img--guides"></div>
+          <div class="resource-card__body">
+            <h3>Care Guides Hub</h3>
+            <p>Step-by-step care guides to help you safely clean and preserve your stone and specialty surfaces.</p>
+            <a href="learn.html#care-guides" class="btn btn--gold btn--sm btn--full">View Stone Care Guides</a>
+          </div>
         </div>
-        <div class="process-step__connector"></div>
-        <div class="process-step">
-          <div class="process-step__num">03</div>
-          <h3>Expert Restoration</h3>
-          <p>Our certified technicians complete the work using professional-grade equipment.</p>
-        </div>
-        <div class="process-step__connector"></div>
-        <div class="process-step">
-          <div class="process-step__num">04</div>
-          <h3>Final Walkthrough</h3>
-          <p>We walk you through the results and provide care tips to maintain your surfaces.</p>
+        <div class="resource-card">
+          <div class="resource-card__img resource-card__img--faq"></div>
+          <div class="resource-card__body">
+            <h3>Stone &amp; Surface FAQs</h3>
+            <p>Clear answers to common questions about stone restoration, maintenance, and service expectations.</p>
+            <a href="learn.html#faq" class="btn btn--gold btn--sm btn--full">Browse Stone FAQs</a>
+          </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- TESTIMONIALS -->
-  <section class="section testimonials">
-    <div class="container">
-      <p class="section__eyebrow">Reviews</p>
-      <h2 class="section__title">What our clients say</h2>
-      <div class="testimonials__grid">
-        <div class="testimonial-card">
-          <div class="testimonial-card__stars">★★★★★</div>
-          <p class="testimonial-card__text">"Restore brought our marble floors back to looking brand new. I couldn't believe the difference. They were professional, on time, and the price was fair."</p>
-          <div class="testimonial-card__author">— Sarah M., Homeowner</div>
-        </div>
-        <div class="testimonial-card">
-          <div class="testimonial-card__stars">★★★★★</div>
-          <p class="testimonial-card__text">"We had years of buildup on our commercial tile floors. The Restore team stripped everything and left the floors looking like they did when we first opened."</p>
-          <div class="testimonial-card__author">— James T., Business Owner</div>
-        </div>
-        <div class="testimonial-card">
-          <div class="testimonial-card__stars">★★★★★</div>
-          <p class="testimonial-card__text">"Our travertine was etched and dull — I thought we'd have to replace it. Restore fixed it in one visit. Highly recommend to anyone with stone floors."</p>
-          <div class="testimonial-card__author">— Linda R., Homeowner</div>
-        </div>
-      </div>
-      <div class="section__cta">
-        <a href="reviews.html" class="btn btn--outline-light">Read More Reviews</a>
-      </div>
-    </div>
-  </section>
-
-  <!-- CTA BAND -->
+  <!-- ===== CTA BAND (solid gold) ===== -->
   <section class="cta-band">
     <div class="container cta-band__inner">
-      <h2>Ready to restore your surfaces?</h2>
-      <p>Contact us today for a free, no-obligation estimate.</p>
-      <a href="contact.html" class="btn btn--gold btn--lg">Get Your Free Estimate</a>
+      <h2>Ready to Transform Your Surfaces?</h2>
+      <p>Get a detailed quote and expert consultation at no cost</p>
+      <a href="contact.html" class="btn btn--white btn--lg btn--rounded-full">Request Free Estimate</a>
+      <div class="cta-features">
+        <div class="cta-feature">
+          <div class="cta-feature__icon">
+            <svg viewBox="0 0 44 44" fill="none"><circle cx="22" cy="22" r="20" fill="rgba(255,255,255,0.2)"/><circle cx="22" cy="22" r="10" stroke="white" stroke-width="2"/><path d="M22 14v8l5 3" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div class="cta-feature__text">
+            <strong>Flexible Scheduling</strong>
+            <span>Scheduled by availability</span>
+          </div>
+        </div>
+        <div class="cta-feature">
+          <div class="cta-feature__icon">
+            <svg viewBox="0 0 44 44" fill="none"><circle cx="22" cy="22" r="20" fill="rgba(255,255,255,0.2)"/><circle cx="22" cy="17" r="5" stroke="white" stroke-width="2"/><path d="M12 36c0-5 4-9 10-9s10 4 10 9" stroke="white" stroke-width="2" stroke-linecap="round"/><path d="M29 21l2 2 4-4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div class="cta-feature__text">
+            <strong>Expert Consultation</strong>
+            <span>Professional assessment of your needs</span>
+          </div>
+        </div>
+        <div class="cta-feature">
+          <div class="cta-feature__icon">
+            <svg viewBox="0 0 44 44" fill="none"><circle cx="22" cy="22" r="20" fill="rgba(255,255,255,0.2)"/><rect x="13" y="11" width="18" height="22" rx="2" stroke="white" stroke-width="2"/><line x1="17" y1="18" x2="27" y2="18" stroke="white" stroke-width="1.5" stroke-linecap="round"/><line x1="17" y1="22" x2="27" y2="22" stroke="white" stroke-width="1.5" stroke-linecap="round"/><line x1="17" y1="26" x2="22" y2="26" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </div>
+          <div class="cta-feature__text">
+            <strong>Detailed Quote</strong>
+            <span>Transparent pricing with no hidden fees</span>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
-  <!-- FOOTER -->
+  <!-- ===== FOOTER ===== -->
   <footer class="footer">
-    <div class="container footer__top">
-      <div class="footer__col footer__col--brand">
-        <a href="index.html" class="logo">
-          <span class="logo__icon">✦</span>
-          <span class="logo__text">RESTORE</span>
-          <span class="logo__sub">Surface Care</span>
+    <div class="footer__body container">
+
+      <div class="footer__brand">
+        <a href="index.html" class="logo logo--footer">
+          <div class="logo__badge logo__badge--sm">
+            <svg viewBox="0 0 60 60" fill="none" aria-hidden="true">
+              <circle cx="30" cy="30" r="30" fill="#1a1a1a"/>
+              <ellipse cx="30" cy="43" rx="20" ry="3.5" stroke="#C89B4C" stroke-width="1.5" fill="none"/>
+              <circle cx="30" cy="14" r="5" fill="#C89B4C"/>
+              <path d="M24 22 Q30 18 36 22 L37 35 H23 Z" fill="#C89B4C"/>
+              <path d="M23 35 L21 46" stroke="#C89B4C" stroke-width="2.5" stroke-linecap="round"/>
+              <path d="M37 35 L39 46" stroke="#C89B4C" stroke-width="2.5" stroke-linecap="round"/>
+              <rect x="25" y="37" width="10" height="4" rx="1.5" fill="#C89B4C"/>
+              <line x1="30" y1="41" x2="30" y2="46" stroke="#C89B4C" stroke-width="2"/>
+              <ellipse cx="30" cy="47" rx="5" ry="2" fill="#C89B4C" opacity="0.6"/>
+            </svg>
+          </div>
+          <div class="logo__labels">
+            <span class="logo__name">RESTORE</span>
+            <span class="logo__tagline">— SURFACE CARE —</span>
+          </div>
         </a>
-        <p class="footer__tagline">Professional surface restoration and maintenance for homes and businesses.</p>
-        <p class="footer__contact">📞 (555) 123-4567</p>
-        <p class="footer__contact">✉ info@restoresurfacecare.com</p>
+        <p class="footer__desc">Restore Surface Care™ provides premium stone, tile, and specialty surface restoration for residential and commercial properties across Greater Houston and surrounding areas.</p>
       </div>
+
       <div class="footer__col">
-        <h4 class="footer__heading">Services</h4>
-        <ul class="footer__links">
-          <li><a href="services.html#marble">Marble Restoration</a></li>
-          <li><a href="services.html#granite">Granite Restoration</a></li>
-          <li><a href="services.html#terrazzo">Terrazzo Restoration</a></li>
-          <li><a href="services.html#tile-grout">Tile &amp; Grout Cleaning</a></li>
-          <li><a href="services.html#concrete">Concrete Restoration</a></li>
-          <li><a href="services.html#vct">Commercial VCT Strip &amp; Wax</a></li>
+        <h4 class="footer__heading">Contact</h4>
+        <ul class="footer__contacts">
+          <li>
+            <svg class="ficon" viewBox="0 0 20 20" fill="none"><path d="M3 4h3l1.5 3.5-1.5 1.5a11 11 0 005 5l1.5-1.5L17 14v3a1 1 0 01-1 1A15 15 0 012 3a1 1 0 011-1z" stroke="#C89B4C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <a href="tel:5551234567">(555) 123-4567</a>
+          </li>
+          <li>
+            <svg class="ficon" viewBox="0 0 20 20" fill="none"><path d="M3 5h14a1 1 0 011 1v8a1 1 0 01-1 1H3a1 1 0 01-1-1V6a1 1 0 011-1z" stroke="#C89B4C" stroke-width="1.5"/><path d="M2 6l8 5 8-5" stroke="#C89B4C" stroke-width="1.5" stroke-linecap="round"/></svg>
+            <a href="mailto:info@restoresurfacecare.com">info@restoresurfacecare.com</a>
+          </li>
+          <li>
+            <svg class="ficon" viewBox="0 0 20 20" fill="none"><path d="M10 2a6 6 0 016 6c0 5-6 10-6 10S4 13 4 8a6 6 0 016-6z" stroke="#C89B4C" stroke-width="1.5"/><circle cx="10" cy="8" r="2" stroke="#C89B4C" stroke-width="1.5"/></svg>
+            <span>Serving Greater Houston &amp; Surrounding Areas</span>
+          </li>
+          <li>
+            <svg class="ficon" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="#C89B4C" stroke-width="1.5"/><path d="M10 6v4l3 2" stroke="#C89B4C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Mon–Fri: 8am–5pm CST</span>
+          </li>
         </ul>
       </div>
+
       <div class="footer__col">
-        <h4 class="footer__heading">Company</h4>
+        <h4 class="footer__heading">Quick Links</h4>
         <ul class="footer__links">
           <li><a href="about.html">About Us</a></li>
+          <li><a href="services.html">Services</a></li>
           <li><a href="our-work.html">Our Work</a></li>
           <li><a href="reviews.html">Reviews</a></li>
-          <li><a href="learn.html">Learn</a></li>
           <li><a href="service-areas.html">Service Areas</a></li>
-          <li><a href="contact.html">Contact Us</a></li>
         </ul>
       </div>
+
       <div class="footer__col">
-        <h4 class="footer__heading">Service Areas</h4>
+        <h4 class="footer__heading">Resources</h4>
         <ul class="footer__links">
-          <li><a href="service-areas.html">Downtown</a></li>
-          <li><a href="service-areas.html">Northside</a></li>
-          <li><a href="service-areas.html">Southside</a></li>
-          <li><a href="service-areas.html">East District</a></li>
-          <li><a href="service-areas.html">West End</a></li>
-          <li><a href="service-areas.html">Surrounding Areas</a></li>
+          <li><a href="learn.html#care-guides">Stone Care Guides</a></li>
+          <li><a href="learn.html#faq">Stone Restoration Faqs</a></li>
+          <li><a href="learn.html#surface-iq">Surface IQ Guide</a></li>
+          <li><a href="learn.html#ask-expert">Ask-The-Expert</a></li>
+          <li><a href="learn.html#products">Cleaning Products</a></li>
         </ul>
       </div>
+
     </div>
     <div class="footer__bottom">
       <div class="container footer__bottom-inner">
-        <p>&copy; 2026 Restore Surface Care. All rights reserved.</p>
-        <p><a href="#">Privacy Policy</a> &nbsp;|&nbsp; <a href="#">Terms of Service</a></p>
+        <p>&copy; 2026 Restore Surface Care™. All rights reserved.</p>
+        <nav class="footer__legal">
+          <a href="#">Terms-Of-Use</a>
+          <a href="#">Privacy Policy</a>
+          <a href="#">Refund-Policy</a>
+          <a href="#">Ask-The-Expert</a>
+        </nav>
       </div>
     </div>
   </footer>
