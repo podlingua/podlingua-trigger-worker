@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Restore Surface Care — Stone, Tile &amp; Specialty Surface Restoration</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400&family=Open+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+/* ============================================================
+   RESTORE Surface Care — Main Stylesheet
+   ============================================================ */
+
+/* ---------- RESET & TOKENS ---------- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --navy:         #0B1C35;
+  --navy-mid:     #0F2443;
+  --gold:         #C89B4C;
+  --gold-dark:    #A67C35;
+  --gold-hover:   #D4A843;
+  --gold-dim:     rgba(200,155,76,0.25);
+  --black:        #000000;
+  --off-white:    #F5F0E8;
+  --cream:        #F2EDE4;
+  --light-gray:   #F0F0F2;
+  --white:        #FFFFFF;
+  --text-dark:    #1A1A2E;
+  --text-mid:     #3D3D3D;
+  --text-gray:    #6B6B6B;
+  --text-light:   #B8C5D1;
+  --shadow-sm:    0 2px 12px rgba(0,0,0,0.08);
+  --shadow-md:    0 6px 28px rgba(0,0,0,0.12);
+  --shadow-lg:    0 12px 48px rgba(0,0,0,0.18);
+  --radius:       12px;
+  --radius-sm:    8px;
+  --transition:   0.22s ease;
+  --serif:        'Playfair Display', Georgia, serif;
+  --sans:         'Open Sans', system-ui, sans-serif;
+}
+
+html { scroll-behavior: smooth; }
+body { font-family: var(--sans); background: var(--white); color: var(--text-dark); font-size: 16px; line-height: 1.7; }
+a { color: inherit; text-decoration: none; }
+ul { list-style: none; }
+img { display: block; max-width: 100%; }
+
+.container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+
+/* ---------- TYPOGRAPHY UTILITIES ---------- */
+.eyebrow {
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  display: block;
+}
+.eyebrow--gold        { color: var(--gold); }
+.eyebrow--gold-spaced { color: var(--gold); letter-spacing: 0.22em; }
+.eyebrow--light-spaced{ color: rgba(255,255,255,0.7); letter-spacing: 0.22em; }
+.eyebrow--center      { text-align: center; }
+
+.heading {
+  font-family: var(--serif);
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 16px;
+}
+.heading--white   { color: var(--white); }
+.heading--dark    { color: var(--text-dark); }
+.heading--center  { text-align: center; }
+.heading--lg      { font-size: clamp(32px, 5vw, 52px); }
+
+.body-text { font-size: 16px; line-height: 1.85; margin-bottom: 20px; }
+.body-text--white  { color: rgba(255,255,255,0.9); }
+.body-text--muted  { color: rgba(255,255,255,0.7); }
+.body-text--gray   { color: var(--text-gray); }
+.body-text--center { text-align: center; max-width: 680px; margin-left: auto; margin-right: auto; }
+
+.section-cta { text-align: center; margin-top: 40px; }
+
+/* ---------- BUTTONS ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 28px;
+  font-family: var(--sans);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition), border-color var(--transition), transform var(--transition);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.btn:hover { transform: translateY(-1px); }
+
+.btn--gold         { background: var(--gold); color: var(--white); border-color: var(--gold); }
+.btn--gold:hover   { background: var(--gold-hover); border-color: var(--gold-hover); }
+
+.btn--outline-gold         { background: transparent; color: var(--gold); border-color: var(--gold); }
+.btn--outline-gold:hover   { background: var(--gold); color: var(--white); }
+
+.btn--outline-white         { background: transparent; color: var(--white); border-color: var(--white); }
+.btn--outline-white:hover   { background: var(--white); color: var(--text-dark); }
+
+.btn--outline-white-gold    { background: transparent; color: var(--white); border-color: rgba(255,255,255,0.6); }
+.btn--outline-white-gold:hover { background: rgba(255,255,255,0.15); }
+
+.btn--white         { background: var(--white); color: var(--gold-dark); border-color: var(--white); font-weight: 700; }
+.btn--white:hover   { background: #f0e8d8; }
+
+.btn--sm  { padding: 10px 20px; font-size: 14px; }
+.btn--lg  { padding: 16px 36px; font-size: 16px; }
+.btn--full { width: 100%; text-align: center; }
+.btn--full-mobile { width: 100%; }
+.btn--rounded-full { border-radius: 50px; }
+
+/* ---------- HEADER ---------- */
+.header {
+  background: var(--navy);
+  border-bottom: 1px solid var(--gold-dim);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 2px 20px rgba(0,0,0,0.4);
+}
+.header__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 80px;
+  gap: 16px;
+}
+
+/* Logo */
+.logo { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+.logo__badge { width: 56px; height: 56px; flex-shrink: 0; }
+.logo__badge--sm { width: 44px; height: 44px; }
+.logo__labels { display: flex; flex-direction: column; }
+.logo__name {
+  font-family: var(--serif);
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--gold);
+  letter-spacing: 0.12em;
+  line-height: 1;
+}
+.logo__tagline {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: rgba(255,255,255,0.6);
+  margin-top: 4px;
+}
+.logo--footer .logo__name { font-size: 18px; }
+
+/* Hamburger */
+.nav-toggle { display: none; flex-direction: column; gap: 5px; background: none; border: none; cursor: pointer; padding: 6px; }
+.nav-toggle span { display: block; width: 26px; height: 2px; background: var(--white); border-radius: 2px; transition: var(--transition); }
+.nav-toggle.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.nav-toggle.open span:nth-child(2) { opacity: 0; }
+.nav-toggle.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+/* Desktop nav */
+.nav__list { display: flex; align-items: center; gap: 2px; }
+.nav__section-label { display: none; }
+.nav__item > a {
+  display: flex; align-items: center; gap: 3px;
+  padding: 8px 12px;
+  font-size: 14px; font-weight: 500;
+  color: rgba(255,255,255,0.8);
+  border-radius: 4px;
+  transition: color var(--transition);
+  white-space: nowrap;
+}
+.nav__item > a:hover,
+.nav__item--active > a { color: var(--gold); }
+.nav__arrow { font-size: 9px; transition: transform var(--transition); }
+.nav__item--dropdown { position: relative; }
+.nav__item--dropdown:hover > a .nav__arrow { transform: rotate(180deg); }
+
+/* Dropdowns */
+.dropdown {
+  display: none;
+  position: absolute; top: calc(100% + 1px); left: 0;
+  background: var(--navy-mid);
+  border: 1px solid var(--gold-dim);
+  border-top: 2px solid var(--gold);
+  box-shadow: var(--shadow-lg);
+  min-width: 220px;
+  z-index: 200;
+  padding: 12px 0;
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+}
+.dropdown li > a { display: block; padding: 8px 20px; font-size: 13.5px; color: rgba(255,255,255,0.7); transition: color var(--transition), padding-left var(--transition); }
+.dropdown li > a:hover { color: var(--gold); padding-left: 26px; }
+
+.dropdown--mega {
+  left: 50%; transform: translateX(-50%);
+  width: 700px;
+  display: none;
+  flex-direction: row;
+  padding: 20px 0;
+}
+.dropdown__col { flex: 1; padding: 0 20px; border-right: 1px solid var(--gold-dim); }
+.dropdown__col:last-child { border-right: none; }
+.dropdown__heading { display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--gold-dim); }
+.dropdown__col > ul > li > a { display: block; padding: 5px 0; font-size: 13px; color: rgba(255,255,255,0.7); transition: color var(--transition); }
+.dropdown__col > ul > li > a:hover { color: var(--gold); }
+
+.nav__item--dropdown:hover > .dropdown { display: block; }
+.nav__item--dropdown:hover > .dropdown--mega { display: flex; }
+
+/* ---------- HERO ---------- */
+.hero {
+  position: relative;
+  min-height: 620px;
+  display: flex;
+  align-items: center;
+  background:
+    url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1600&q=80') center/cover no-repeat;
+  overflow: hidden;
+}
+.hero__overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to bottom, rgba(10,15,25,0.72) 0%, rgba(10,15,25,0.55) 100%);
+}
+.hero__content {
+  position: relative; z-index: 1;
+  padding: 80px 20px;
+  max-width: 640px;
+  text-align: center;
+  margin: 0 auto;
+  width: 100%;
+}
+.hero__eyebrow {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.22em;
+  text-transform: uppercase; color: rgba(255,255,255,0.7);
+  margin-bottom: 20px;
+}
+.hero__title {
+  font-family: var(--serif);
+  font-size: clamp(36px, 7vw, 64px);
+  font-weight: 800; line-height: 1.15;
+  color: var(--white);
+  margin-bottom: 20px;
+}
+.hero__title--gold { color: var(--gold); font-style: italic; }
+.hero__sub {
+  font-size: 16px; font-weight: 600;
+  color: rgba(255,255,255,0.9);
+  margin-bottom: 32px; line-height: 1.7;
+}
+.hero__btns { display: flex; flex-direction: column; gap: 12px; max-width: 420px; margin: 0 auto; }
+
+/* ---------- STATS SECTION ---------- */
+.stats-section { background: var(--light-gray); padding: 60px 0 0; }
+.stats-card {
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  padding: 40px;
+  max-width: 640px;
+  margin: 0 auto;
+}
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.stat-box {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; text-align: center;
+  border: 1.5px solid var(--gold-dim);
+  border-radius: var(--radius-sm);
+  padding: 24px 16px;
+  background: #fdfaf5;
+}
+.stat-box__num { font-family: var(--serif); font-size: 26px; font-weight: 700; color: var(--gold); line-height: 1; margin-bottom: 8px; }
+.stat-box__label { font-size: 13px; color: var(--text-gray); }
+.wave-divider { margin-top: 48px; display: block; line-height: 0; }
+.wave-divider svg { width: 100%; height: 60px; display: block; }
+
+/* ---------- EXPERIENCE SECTION (gold bg) ---------- */
+.experience-section { background: var(--gold); padding: 72px 0; }
+.experience-section__inner { max-width: 680px; margin: 0 auto; text-align: center; }
+.experience-section__inner .heading { font-size: clamp(26px, 4vw, 40px); margin-bottom: 16px; }
+.experience-section__inner .body-text { margin-bottom: 28px; }
+.video-placeholder {
+  margin-top: 32px;
+  background: rgba(0,0,0,0.25);
+  border-radius: var(--radius);
+  border: 2px solid rgba(255,255,255,0.3);
+  aspect-ratio: 16/9;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+}
+.video-placeholder__inner { text-align: center; color: rgba(255,255,255,0.8); }
+.play-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 60px; height: 60px; border-radius: 50%;
+  background: rgba(255,255,255,0.2); color: var(--white);
+  font-size: 22px; margin-bottom: 10px; cursor: pointer;
+  border: 2px solid rgba(255,255,255,0.5);
+  transition: background var(--transition);
+}
+.play-btn:hover { background: rgba(255,255,255,0.35); }
+.video-placeholder__inner p { font-size: 13px; opacity: 0.7; }
+
+/* ---------- ABOUT CARD SECTION ---------- */
+.about-section { background: var(--light-gray); padding: 64px 0; }
+.about-card {
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  padding: 48px 40px;
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: center;
+}
+.about-card__title {
+  font-family: var(--serif); font-size: clamp(24px, 4vw, 36px);
+  font-weight: 700; color: var(--text-dark);
+  margin-bottom: 20px; line-height: 1.3;
+}
+.about-card__text { font-size: 16px; color: var(--text-gray); margin-bottom: 16px; line-height: 1.85; }
+
+/* ---------- SERVICES SECTION (dark) ---------- */
+.services-section {
+  background:
+    linear-gradient(rgba(10,10,10,0.88), rgba(10,10,10,0.88)),
+    url('https://images.unsplash.com/photo-1536376072261-38c75010e6c9?w=1400&q=80') center/cover;
+  padding: 80px 0;
+}
+.services-section .heading { font-size: clamp(26px, 4vw, 40px); margin-bottom: 16px; }
+.services-section .body-text--center { margin-bottom: 48px; }
+
+.service-cards { display: flex; flex-direction: column; gap: 20px; max-width: 680px; margin: 0 auto; }
+.service-card-img {
+  background: var(--white);
+  border: 1.5px solid var(--gold-dim);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+.service-card-img:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+.service-card-img__photo {
+  width: 100%; height: 220px; object-fit: cover;
+  background: #2a2a2a center/cover;
+}
+.service-card-img__photo--marble    { background-image: url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80'); background-size: cover; background-position: center; }
+.service-card-img__photo--travertine { background-image: url('https://images.unsplash.com/photo-1631679706909-1844bbd07221?w=800&q=80'); background-size: cover; background-position: center; }
+.service-card-img__photo--terrazzo  { background-image: url('https://images.unsplash.com/photo-1564540574859-0dfb63985953?w=800&q=80'); background-size: cover; background-position: center; }
+.service-card-img__photo--granite   { background-image: url('https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&q=80'); background-size: cover; background-position: center; }
+.service-card-img__photo--tile      { background-image: url('https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=800&q=80'); background-size: cover; background-position: center; }
+.service-card-img__photo--concrete  { background-image: url('https://images.unsplash.com/photo-1617791160505-6f00504e3519?w=800&q=80'); background-size: cover; background-position: center; }
+
+.service-card-img__body { padding: 24px; }
+.service-card-img__body h3 {
+  font-family: var(--serif); font-size: 20px; font-weight: 700;
+  color: var(--gold-dark); margin-bottom: 10px;
+}
+.service-card-img__body p { font-size: 14px; color: var(--text-gray); line-height: 1.75; margin-bottom: 20px; }
+
+/* ---------- BEFORE & AFTER ---------- */
+.before-after-section { background: var(--white); padding: 80px 0; }
+.before-after-section .heading { font-size: clamp(26px, 4vw, 42px); margin-bottom: 14px; }
+.before-after-section .body-text { margin-bottom: 40px; }
+
+.ba-cards { display: flex; flex-direction: column; gap: 20px; max-width: 700px; margin: 0 auto 36px; }
+.ba-card {
+  background: #2a2a2a;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+}
+.ba-card__images { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px 12px 0; }
+.ba-img {
+  border-radius: 6px;
+  border: 2px solid var(--gold);
+  aspect-ratio: 4/3;
+  background: #1a1a1a center/cover;
+}
+.ba-img--marble-before   { background: linear-gradient(135deg, #8B7355 0%, #C4A882 100%); }
+.ba-img--marble-after    { background: linear-gradient(135deg, #D4C4AA 0%, #F5EDD8 100%); }
+.ba-img--travertine-before { background: linear-gradient(135deg, #7A6748 0%, #A8926B 100%); }
+.ba-img--travertine-after  { background: linear-gradient(135deg, #C8B090 0%, #E8D8C0 100%); }
+.ba-img--terrazzo-before { background: linear-gradient(135deg, #4a4a4a 0%, #888 100%); }
+.ba-img--terrazzo-after  { background: linear-gradient(135deg, #aaa 0%, #ddd 100%); }
+.ba-card__caption {
+  padding: 14px 16px;
+  font-size: 13px; font-weight: 600;
+  color: var(--white);
+  background: rgba(255,255,255,0.08);
+  text-align: center;
+  letter-spacing: 0.02em;
+}
+.ba-btns { display: flex; flex-direction: column; gap: 12px; max-width: 480px; margin: 0 auto; }
+
+/* ---------- REVIEWS ---------- */
+.reviews-section { background: var(--light-gray); padding: 72px 0; }
+.google-badge {
+  display: flex; align-items: center; gap: 20px;
+  background: var(--white); border-radius: var(--radius);
+  padding: 24px 28px; margin-bottom: 48px;
+  box-shadow: var(--shadow-sm);
+  max-width: 480px;
+}
+.google-badge__logo { font-size: 28px; font-weight: 700; letter-spacing: -1px; }
+.google-badge__rating { display: flex; align-items: center; gap: 8px; }
+.google-badge__rating strong { font-size: 22px; color: var(--text-dark); }
+.stars { color: #FFA000; font-size: 18px; letter-spacing: 2px; }
+.google-badge__label { font-size: 14px; font-weight: 700; color: var(--text-dark); margin: 4px 0; }
+.trustindex-badge {
+  display: inline-block; background: #00897B; color: white;
+  font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 4px;
+}
+
+.review-cards { display: flex; flex-direction: column; gap: 16px; max-width: 640px; margin: 32px auto 0; }
+.review-card {
+  background: var(--white);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.review-card__video-thumb {
+  position: relative; aspect-ratio: 16/9;
+  background: linear-gradient(135deg, #2a2420 0%, #1a1510 100%);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+.review-card__video-thumb--2 { background: linear-gradient(135deg, #1a1a2e 0%, #0d0d1a 100%); }
+.play-overlay {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 12px;
+  color: var(--white); text-align: center; padding: 20px;
+}
+.play-overlay span { font-size: 16px; font-weight: 600; }
+.play-overlay small { font-size: 12px; opacity: 0.8; }
+.play-btn-lg {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: rgba(255,255,255,0.15); color: white;
+  font-size: 20px; display: flex; align-items: center; justify-content: center;
+  border: 2px solid rgba(255,255,255,0.4); cursor: pointer;
+  transition: background var(--transition);
+}
+.play-btn-lg:hover { background: rgba(255,255,255,0.3); }
+.review-card--text { padding: 24px; }
+.review-card__header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.review-card__avatar {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: linear-gradient(135deg, #C89B4C, #8B6914);
+  color: white; font-weight: 700; font-size: 18px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.review-card__header strong { display: block; font-size: 15px; }
+.review-card__meta { font-size: 12px; color: var(--text-gray); }
+.google-g { margin-left: auto; font-size: 22px; font-weight: 700; color: #4285F4; }
+.review-card__quote { font-size: 14px; color: var(--text-gray); line-height: 1.75; font-style: italic; }
+
+/* ---------- SERVICE COVERAGE ---------- */
+.coverage-section { background: var(--off-white); padding: 80px 0; }
+.coverage-section__inner { max-width: 640px; }
+.gold-rule { border: none; border-top: 2px solid var(--gold); margin: 28px 0; }
+.area-list {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 12px 32px; margin-bottom: 36px;
+}
+.area-list li { font-size: 16px; color: var(--text-mid); display: flex; align-items: center; gap: 10px; }
+.area-check {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--gold); color: white;
+  font-size: 13px; font-weight: 700; flex-shrink: 0;
+}
+
+/* ---------- RESOURCES SECTION ---------- */
+.resources-section { background: var(--cream); padding: 80px 0; }
+.resources-section .heading { margin-bottom: 12px; font-size: clamp(26px, 4vw, 40px); }
+.resources-section .body-text { margin-bottom: 40px; }
+.resource-cards { display: flex; flex-direction: column; gap: 20px; max-width: 680px; margin: 0 auto; }
+.resource-card {
+  background: var(--white);
+  border: 1.5px solid var(--gold-dim);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.resource-card__img {
+  width: 100%; height: 200px;
+  background: #bbb center/cover;
+}
+.resource-card__img--articles { background: linear-gradient(135deg, #2a2a35 0%, #4a3520 100%); }
+.resource-card__img--guides   { background: linear-gradient(135deg, #2a3020 0%, #504028 100%); }
+.resource-card__img--faq      { background: linear-gradient(135deg, #302822 0%, #5a4030 100%); }
+.resource-card__body { padding: 24px; }
+.resource-card__body h3 {
+  font-family: var(--serif); font-size: 20px; font-weight: 700;
+  color: var(--text-dark); margin-bottom: 10px;
+}
+.resource-card__body p { font-size: 14px; color: var(--text-gray); line-height: 1.75; margin-bottom: 20px; }
+
+/* ---------- CTA BAND ---------- */
+.cta-band { background: var(--gold); padding: 72px 0; }
+.cta-band__inner { text-align: center; max-width: 700px; margin: 0 auto; }
+.cta-band__inner h2 {
+  font-family: var(--serif); font-size: clamp(26px, 4vw, 40px);
+  font-weight: 800; color: var(--white); margin-bottom: 10px;
+}
+.cta-band__inner p { font-size: 17px; color: rgba(255,255,255,0.85); margin-bottom: 28px; }
+.cta-features {
+  display: flex; flex-direction: column;
+  gap: 20px; margin-top: 40px; text-align: left;
+  max-width: 400px; margin-left: auto; margin-right: auto;
+}
+.cta-feature { display: flex; align-items: flex-start; gap: 16px; }
+.cta-feature__icon { width: 48px; height: 48px; flex-shrink: 0; }
+.cta-feature__text { display: flex; flex-direction: column; }
+.cta-feature__text strong { font-size: 15px; color: var(--white); }
+.cta-feature__text span   { font-size: 13px; color: rgba(255,255,255,0.75); }
+
+/* ---------- FOOTER ---------- */
+.footer { background: #07121F; border-top: 2px solid var(--gold); }
+.footer__body {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 0.8fr 0.8fr;
+  gap: 48px;
+  padding: 60px 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.footer__brand .logo { margin-bottom: 20px; }
+.footer__desc { font-size: 13.5px; color: rgba(255,255,255,0.5); line-height: 1.8; }
+.footer__heading {
+  font-family: var(--serif); font-size: 14px; color: var(--gold);
+  margin-bottom: 18px; padding-bottom: 10px;
+  border-bottom: 1px solid var(--gold-dim); letter-spacing: 0.04em;
+}
+.footer__contacts { display: flex; flex-direction: column; gap: 12px; }
+.footer__contacts li { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; color: rgba(255,255,255,0.65); }
+.footer__contacts li a { color: rgba(255,255,255,0.65); transition: color var(--transition); }
+.footer__contacts li a:hover { color: var(--gold); }
+.ficon { width: 18px; height: 18px; flex-shrink: 0; margin-top: 2px; }
+.footer__links { display: flex; flex-direction: column; gap: 10px; }
+.footer__links li a { font-size: 13.5px; color: rgba(255,255,255,0.55); transition: color var(--transition); }
+.footer__links li a:hover { color: var(--gold); }
+.footer__bottom { border-top: 1px solid var(--gold-dim); padding: 18px 0; }
+.footer__bottom-inner {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 12.5px; color: rgba(255,255,255,0.35);
+  flex-wrap: wrap; gap: 10px;
+}
+.footer__legal { display: flex; gap: 20px; flex-wrap: wrap; }
+.footer__legal a { color: rgba(255,255,255,0.35); transition: color var(--transition); }
+.footer__legal a:hover { color: var(--gold); }
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (min-width: 769px) {
+  .hero__btns { flex-direction: row; justify-content: center; }
+  .hero__btns .btn { width: auto; min-width: 220px; }
+  .service-cards { display: grid; grid-template-columns: 1fr 1fr; max-width: none; }
+  .ba-cards { display: grid; grid-template-columns: 1fr 1fr; max-width: none; }
+  .ba-cards .ba-card:last-child:nth-child(odd) { grid-column: 1 / -1; max-width: 360px; margin: 0 auto; }
+  .review-cards { display: grid; grid-template-columns: 1fr 1fr; max-width: none; }
+  .resource-cards { display: grid; grid-template-columns: 1fr 1fr 1fr; max-width: none; }
+  .cta-features { flex-direction: row; justify-content: center; max-width: none; gap: 40px; }
+  .coverage-section__inner { max-width: none; }
+  .btn--full-mobile { width: auto; }
+  .ba-btns { flex-direction: row; justify-content: center; }
+}
+
+@media (min-width: 1024px) {
+  .service-cards { grid-template-columns: 1fr 1fr 1fr; }
+  .review-cards { grid-template-columns: 1fr 1fr 1fr; }
+  .ba-cards { grid-template-columns: 1fr 1fr 1fr; }
+  .ba-cards .ba-card:last-child:nth-child(odd) { grid-column: auto; max-width: none; }
+}
+
+@media (max-width: 768px) {
+  .nav-toggle { display: flex; }
+  .nav {
+    display: none; position: absolute;
+    top: 80px; left: 0; right: 0;
+    background: var(--navy-mid);
+    border-top: 1px solid var(--gold-dim);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    max-height: calc(100vh - 80px);
+    overflow-y: auto;
+    z-index: 999;
+  }
+  .nav.open { display: block; }
+  .nav__list { flex-direction: column; gap: 0; align-items: stretch; padding: 8px 0 20px; }
+  .nav__item > a { padding: 13px 24px; border-radius: 0; color: rgba(255,255,255,0.85); font-size: 15px; }
+  .nav__item--active > a { color: var(--gold); }
+  .nav__section-label {
+    display: block;
+    padding: 16px 24px 6px;
+  }
+  .nav__section-label span {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.16em;
+    text-transform: uppercase; color: var(--gold);
+  }
+  .nav__item--dropdown > .dropdown,
+  .nav__item--dropdown > .dropdown--mega {
+    position: static; transform: none; width: 100%;
+    border: none; box-shadow: none;
+    background: rgba(0,0,0,0.2);
+    display: none; flex-direction: column; padding: 0;
+    border-radius: 0;
+  }
+  .nav__item--dropdown.open > .dropdown,
+  .nav__item--dropdown.open > .dropdown--mega { display: block; }
+  .dropdown__col { border-right: none; padding: 12px 24px; border-bottom: 1px solid var(--gold-dim); }
+  .dropdown__col:last-child { border-bottom: none; }
+  .dropdown li > a { padding: 7px 28px; }
+
+  .stats-card { padding: 24px 16px; }
+  .stats-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .stat-box { padding: 16px 12px; }
+  .stat-box__num { font-size: 20px; }
+  .about-card { padding: 32px 20px; }
+  .footer__body { grid-template-columns: 1fr; gap: 32px; padding: 40px 20px; }
+  .footer__bottom-inner { flex-direction: column; text-align: center; }
+  .footer__legal { justify-content: center; }
+  .area-list { grid-template-columns: 1fr; }
+  .ba-btns { max-width: 100%; }
+  .google-badge { flex-direction: column; align-items: flex-start; max-width: 100%; }
+}
+  </style>
+</head>
+<body>
+
+  <!-- ===== HEADER ===== -->
+  <header class="header" id="header">
+    <div class="header__inner container">
+
+      <a href="#" class="logo">
+        <div class="logo__badge">
+          <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <circle cx="30" cy="30" r="30" fill="#1a1a1a"/>
+            <ellipse cx="30" cy="43" rx="20" ry="3.5" stroke="#C89B4C" stroke-width="1.5" fill="none"/>
+            <circle cx="30" cy="14" r="5" fill="#C89B4C"/>
+            <path d="M24 22 Q30 18 36 22 L37 35 H23 Z" fill="#C89B4C"/>
+            <path d="M23 35 L21 46" stroke="#C89B4C" stroke-width="2.5" stroke-linecap="round"/>
+            <path d="M37 35 L39 46" stroke="#C89B4C" stroke-width="2.5" stroke-linecap="round"/>
+            <rect x="25" y="37" width="10" height="4" rx="1.5" fill="#C89B4C"/>
+            <line x1="30" y1="41" x2="30" y2="46" stroke="#C89B4C" stroke-width="2"/>
+            <ellipse cx="30" cy="47" rx="5" ry="2" fill="#C89B4C" opacity="0.6"/>
+          </svg>
+        </div>
+        <div class="logo__labels">
+          <span class="logo__name">RESTORE</span>
+          <span class="logo__tagline">— SURFACE CARE —</span>
+        </div>
+      </a>
+
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+
+      <nav class="nav" id="nav" aria-label="Main navigation">
+        <ul class="nav__list">
+          <li class="nav__item nav__item--active"><a href="#">Home</a></li>
+          <li class="nav__item nav__item--dropdown">
+            <a href="#">About Us <span class="nav__arrow">▾</span></a>
+            <ul class="dropdown">
+              <li><a href="#">Our Story</a></li>
+              <li><a href="#">Our Team</a></li>
+              <li><a href="#">Certifications</a></li>
+            </ul>
+          </li>
+          <li class="nav__item nav__item--dropdown">
+            <a href="#">Services <span class="nav__arrow">▾</span></a>
+            <ul class="dropdown dropdown--mega">
+              <li class="dropdown__col">
+                <span class="dropdown__heading">Natural Stone Services</span>
+                <ul>
+                  <li><a href="#">Marble Restoration</a></li>
+                  <li><a href="#">Travertine Restoration</a></li>
+                  <li><a href="#">Limestone Restoration</a></li>
+                  <li><a href="#">Granite Restoration</a></li>
+                  <li><a href="#">Quartzite Restoration</a></li>
+                  <li><a href="#">Slate Restoration</a></li>
+                  <li><a href="#">Soapstone Restoration</a></li>
+                </ul>
+              </li>
+              <li class="dropdown__col">
+                <span class="dropdown__heading">Tile, Concrete &amp; Engineered Surfaces</span>
+                <ul>
+                  <li><a href="#">Terrazzo Restoration</a></li>
+                  <li><a href="#">Concrete Restoration</a></li>
+                  <li><a href="#">Concrete Floor Prep</a></li>
+                  <li><a href="#">Tile and Grout Cleaning</a></li>
+                  <li><a href="#">Quartz (Engineered Stone) Restoration</a></li>
+                </ul>
+              </li>
+              <li class="dropdown__col">
+                <span class="dropdown__heading">Commercial &amp; Specialty Services</span>
+                <ul>
+                  <li><a href="#">Commercial VCT Strip &amp; Wax</a></li>
+                  <li><a href="#">Commercial Maintenance</a></li>
+                  <li><a href="#">Legacy Services</a></li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+          <li class="nav__item nav__item--dropdown">
+            <a href="#">Our Work <span class="nav__arrow">▾</span></a>
+            <ul class="dropdown">
+              <li><a href="#">Photo Gallery</a></li>
+              <li><a href="#">Before &amp; After</a></li>
+              <li><a href="#">Case Studies</a></li>
+            </ul>
+          </li>
+          <li class="nav__item"><a href="#">Reviews</a></li>
+          <li class="nav__item"><a href="#">Service Areas</a></li>
+          <li class="nav__item nav__section-label"><span>Resources</span></li>
+          <li class="nav__item"><a href="#">Stone Care Guides</a></li>
+          <li class="nav__item"><a href="#">Stone Restoration Faqs</a></li>
+          <li class="nav__item"><a href="#">Surface IQ Guide</a></li>
+          <li class="nav__item"><a href="#">Ask-The-Expert</a></li>
+          <li class="nav__item"><a href="#">Cleaning Products</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ===== HERO ===== -->
+  <section class="hero">
+    <div class="hero__overlay"></div>
+    <div class="container hero__content">
+      <p class="hero__eyebrow">Premium Stone Restoration Experts</p>
+      <h1 class="hero__title">
+        Restore Your<br/>
+        <span class="hero__title--gold">Stone Surfaces</span><br/>
+        To Like-New Perfection
+      </h1>
+      <p class="hero__sub">
+        Expert restoration for marble, terrazzo, travertine, granite, and concrete surfaces
+        — trusted across the region for precision, care, and lasting results.
+      </p>
+      <div class="hero__btns">
+        <a href="#" class="btn btn--gold btn--full">Request Free Evaluation</a>
+        <a href="tel:5551234567" class="btn btn--outline-white btn--full">
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="flex-shrink:0"><path d="M3 4h3l1.5 3.5-1.5 1.5a11 11 0 005 5l1.5-1.5L17 14v3a1 1 0 01-1 1A15 15 0 012 3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Call or Text (555) 123-4567
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== STATS ===== -->
+  <section class="stats-section">
+    <div class="container">
+      <div class="stats-card">
+        <div class="stats-grid">
+          <div class="stat-box">
+            <span class="stat-box__num">Since 2019</span>
+            <span class="stat-box__label">Serving Houston</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-box__num">15+ Years</span>
+            <span class="stat-box__label">Combined Experience</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-box__num">140+</span>
+            <span class="stat-box__label">5-Star Reviews</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-box__num">100%</span>
+            <span class="stat-box__label">Satisfaction Focus</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="wave-divider" aria-hidden="true">
+      <svg viewBox="0 0 1440 80" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M0,40 C240,80 480,0 720,40 C960,80 1200,0 1440,40 L1440,80 L0,80 Z" fill="#C89B4C"/>
+      </svg>
+    </div>
+  </section>
+
+  <!-- ===== EXPERIENCE / VIDEO (gold bg) ===== -->
+  <section class="experience-section">
+    <div class="container experience-section__inner">
+      <p class="eyebrow eyebrow--light-spaced">Experience Restore Surface Care</p>
+      <h2 class="heading heading--white">
+        Let us show you how<br/>Restore approaches stone restoration
+      </h2>
+      <p class="body-text body-text--white">
+        A closer look at how we restore and protect natural stone using proven methods,
+        precision craftsmanship, and surface-safe techniques.
+      </p>
+      <a href="#" class="btn btn--outline-white-gold">
+        Watch our stone restoration process &nbsp;▶
+      </a>
+      <div class="video-placeholder">
+        <div class="video-placeholder__inner">
+          <div class="play-btn" aria-label="Play video">▶</div>
+          <p>Stone Restoration Process Video</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== ABOUT CARD (light bg) ===== -->
+  <section class="about-section">
+    <div class="container">
+      <div class="about-card">
+        <h2 class="about-card__title">Expert Stone Restoration<br/>Property Owners Trust</h2>
+        <p class="about-card__text">
+          Restore Surface Care specializes in restoring, protecting, and maintaining natural stone and specialty surfaces for residential and commercial properties. From marble and terrazzo to concrete, tile, and engineered stone, we focus on precision craftsmanship, surface-safe methods, and results that last.
+        </p>
+        <p class="about-card__text">
+          Every project begins with a careful evaluation so the right solution is applied — no shortcuts, no unnecessary services, just expert care tailored to your surface.
+        </p>
+        <a href="#" class="btn btn--gold">Learn About Our Approach</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SERVICES (dark stone bg) ===== -->
+  <section class="services-section">
+    <div class="container">
+      <p class="eyebrow eyebrow--gold-spaced">Stone and Surface Services</p>
+      <h2 class="heading heading--white heading--center">
+        Professional Stone Restoration &amp;<br/>Surface Care Services
+      </h2>
+      <p class="body-text body-text--muted body-text--center">
+        From residential homes to commercial properties, we provide expert restoration, cleaning, and stone surface care services tailored to your specific material and condition.
+      </p>
+
+      <div class="service-cards">
+        <div class="service-card-img">
+          <div class="service-card-img__photo service-card-img__photo--marble"></div>
+          <div class="service-card-img__body">
+            <h3>Marble Restoration</h3>
+            <p>Fix dull, scratched, or stained marble with expert marble polishing and restoration that restores the beauty and shine of your floors and surfaces.</p>
+            <a href="#" class="btn btn--gold btn--full">View Marble Restoration</a>
+          </div>
+        </div>
+        <div class="service-card-img">
+          <div class="service-card-img__photo service-card-img__photo--travertine"></div>
+          <div class="service-card-img__body">
+            <h3>Travertine Restoration</h3>
+            <p>Repair worn, pitted, or soiled travertine with professional travertine restoration that fills holes, smooths rough areas, &amp; refreshes the appearance.</p>
+            <a href="#" class="btn btn--gold btn--full">View Travertine Restoration</a>
+          </div>
+        </div>
+        <div class="service-card-img">
+          <div class="service-card-img__photo service-card-img__photo--terrazzo"></div>
+          <div class="service-card-img__body">
+            <h3>Terrazzo Restoration</h3>
+            <p>Bring faded or cloudy terrazzo back to life with professional terrazzo restoration that improves clarity, shine, and overall floor consistency.</p>
+            <a href="#" class="btn btn--gold btn--full">View Terrazzo Restoration</a>
+          </div>
+        </div>
+        <div class="service-card-img">
+          <div class="service-card-img__photo service-card-img__photo--granite"></div>
+          <div class="service-card-img__body">
+            <h3>Granite Restoration</h3>
+            <p>Refresh worn or dull granite with professional granite restoration that restores clarity, enhances appearance, and helps protect surfaces long-term.</p>
+            <a href="#" class="btn btn--gold btn--full">View Granite Restoration</a>
+          </div>
+        </div>
+        <div class="service-card-img">
+          <div class="service-card-img__photo service-card-img__photo--tile"></div>
+          <div class="service-card-img__body">
+            <h3>Tile &amp; Grout Cleaning</h3>
+            <p>Improve the look of tile and grout with professional cleaning that lifts built-up dirt and restores a cleaner, brighter look.</p>
+            <a href="#" class="btn btn--gold btn--full">View Tile &amp; Grout Cleaning</a>
+          </div>
+        </div>
+        <div class="service-card-img">
+          <div class="service-card-img__photo service-card-img__photo--concrete"></div>
+          <div class="service-card-img__body">
+            <h3>Concrete Restoration</h3>
+            <p>Improve dull or worn concrete floors with professional concrete restoration that creates a smoother, cleaner, and more durable finish.</p>
+            <a href="#" class="btn btn--gold btn--full">View Concrete Restoration</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-cta">
+        <a href="#" class="btn btn--gold btn--lg btn--rounded-full btn--full-mobile">Explore All Services</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== BEFORE & AFTER (light bg) ===== -->
+  <section class="before-after-section">
+    <div class="container">
+      <h2 class="heading heading--dark heading--center">Real Transformations.<br/>Lasting Results.</h2>
+      <p class="body-text body-text--gray body-text--center">
+        See how professional restoration brings worn stone surfaces back to a clean, polished, like-new appearance.
+      </p>
+
+      <div class="ba-cards">
+        <div class="ba-card">
+          <div class="ba-card__images">
+            <div class="ba-img ba-img--marble-before"></div>
+            <div class="ba-img ba-img--marble-after"></div>
+          </div>
+          <div class="ba-card__caption">Marble Floors Restored to a Clean, Polished Look</div>
+        </div>
+        <div class="ba-card">
+          <div class="ba-card__images">
+            <div class="ba-img ba-img--travertine-before"></div>
+            <div class="ba-img ba-img--travertine-after"></div>
+          </div>
+          <div class="ba-card__caption">Travertine Floors Restored to an Even Polished Finish</div>
+        </div>
+        <div class="ba-card">
+          <div class="ba-card__images">
+            <div class="ba-img ba-img--terrazzo-before"></div>
+            <div class="ba-img ba-img--terrazzo-after"></div>
+          </div>
+          <div class="ba-card__caption">Terrazzo Floors Restored to a Bright, Polished Finish</div>
+        </div>
+      </div>
+
+      <div class="ba-btns">
+        <a href="#" class="btn btn--gold btn--lg btn--rounded-full btn--full-mobile">View More Before &amp; After Images</a>
+        <a href="#" class="btn btn--outline-gold btn--lg btn--rounded-full btn--full-mobile">View More Case Studies</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== REVIEWS (light gray bg) ===== -->
+  <section class="reviews-section">
+    <div class="container">
+      <div class="google-badge">
+        <div class="google-badge__logo">
+          <span style="color:#4285F4">G</span><span style="color:#EA4335">o</span><span style="color:#FBBC05">o</span><span style="color:#4285F4">g</span><span style="color:#34A853">l</span><span style="color:#EA4335">e</span>
+        </div>
+        <div class="google-badge__info">
+          <div class="google-badge__rating">
+            <strong>5.0</strong>
+            <span class="stars">★★★★★</span>
+          </div>
+          <div class="google-badge__label"><strong>Top Rated Service 2026</strong></div>
+          <span class="trustindex-badge">✓ Verified by Trustindex</span>
+        </div>
+      </div>
+
+      <p class="eyebrow eyebrow--gold-spaced eyebrow--center">Customer Stories</p>
+      <h2 class="heading heading--dark heading--center">Hear From Customers Who<br/>Chose Restore Surface Care</h2>
+      <p class="body-text body-text--gray body-text--center">
+        Real experiences from homeowners and businesses who trusted Restore with their stone and surface restoration.
+      </p>
+
+      <div class="review-cards">
+        <div class="review-card">
+          <div class="review-card__video-thumb">
+            <div class="play-overlay">
+              <div class="play-overlay__text">
+                <span>HIT <span style="color:#C89B4C">PLAY</span></span>
+                <small>to Hear What Our Customers Say!</small>
+                <div class="stars" style="color:#C89B4C">★★★★★</div>
+              </div>
+              <button class="play-btn-lg" aria-label="Play testimonial video">▶</button>
+            </div>
+          </div>
+        </div>
+        <div class="review-card">
+          <div class="review-card__video-thumb review-card__video-thumb--2">
+            <div class="play-overlay">
+              <span>HIT <span style="color:#C89B4C">PLAY</span></span>
+              <button class="play-btn-lg" aria-label="Play testimonial video">▶</button>
+            </div>
+          </div>
+        </div>
+        <div class="review-card review-card--text">
+          <div class="review-card__header">
+            <div class="review-card__avatar">E</div>
+            <div>
+              <strong>Evelyn MacKay</strong>
+              <span class="review-card__meta">1 week ago</span>
+            </div>
+            <div class="google-g">G</div>
+          </div>
+          <div class="stars" style="color:#C89B4C; font-size:18px; margin-bottom:10px">★★★★★ <span style="color:#4285F4; font-size:14px">✓</span></div>
+          <p class="review-card__quote">"The team was so great! We had a 'small' area but it was a big project and took a lot of work to get right. Very happy with the results."</p>
+        </div>
+      </div>
+
+      <div class="section-cta">
+        <a href="#" class="btn btn--gold btn--lg btn--rounded-full btn--full-mobile">Read More Reviews</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SERVICE COVERAGE (off-white) ===== -->
+  <section class="coverage-section">
+    <div class="container coverage-section__inner">
+      <div class="coverage-section__text">
+        <p class="eyebrow eyebrow--gold-spaced">Service Coverage</p>
+        <h2 class="heading heading--dark">Service Coverage for<br/>Greater Houston</h2>
+        <p class="body-text body-text--gray">
+          We proudly serve homeowners and businesses throughout Greater Houston, delivering consistent, high-quality stone and surface restoration services across residential and commercial properties.
+        </p>
+        <hr class="gold-rule" />
+        <ul class="area-list">
+          <li><span class="area-check">✔</span> Spring</li>
+          <li><span class="area-check">✔</span> The Woodlands</li>
+          <li><span class="area-check">✔</span> Tomball</li>
+          <li><span class="area-check">✔</span> Magnolia</li>
+          <li><span class="area-check">✔</span> Humble</li>
+          <li><span class="area-check">✔</span> Cypress</li>
+          <li><span class="area-check">✔</span> Houston</li>
+          <li><span class="area-check">✔</span> Memorial</li>
+          <li><span class="area-check">✔</span> Katy</li>
+          <li><span class="area-check">✔</span> Conroe</li>
+        </ul>
+        <a href="#" class="btn btn--gold btn--rounded-full">See All Service Areas</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== HELPFUL RESOURCES (cream bg) ===== -->
+  <section class="resources-section">
+    <div class="container">
+      <h2 class="heading heading--dark heading--center">Helpful Resources</h2>
+      <p class="body-text body-text--gray body-text--center">
+        Expert guidance, care insights, and answers to help you protect and extend the life of your stone and surfaces.
+      </p>
+      <div class="resource-cards">
+        <div class="resource-card">
+          <div class="resource-card__img resource-card__img--articles"></div>
+          <div class="resource-card__body">
+            <h3>Stone Restoration Articles</h3>
+            <p>Articles and expert insights on restoring, maintaining, and protecting natural stone surfaces.</p>
+            <a href="#" class="btn btn--gold btn--sm btn--full">View Stone Related Articles</a>
+          </div>
+        </div>
+        <div class="resource-card">
+          <div class="resource-card__img resource-card__img--guides"></div>
+          <div class="resource-card__body">
+            <h3>Care Guides Hub</h3>
+            <p>Step-by-step care guides to help you safely clean and preserve your stone and specialty surfaces.</p>
+            <a href="#" class="btn btn--gold btn--sm btn--full">View Stone Care Guides</a>
+          </div>
+        </div>
+        <div class="resource-card">
+          <div class="resource-card__img resource-card__img--faq"></div>
+          <div class="resource-card__body">
+            <h3>Stone &amp; Surface FAQs</h3>
+            <p>Clear answers to common questions about stone restoration, maintenance, and service expectations.</p>
+            <a href="#" class="btn btn--gold btn--sm btn--full">Browse Stone FAQs</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CTA BAND (solid gold) ===== -->
+  <section class="cta-band">
+    <div class="container cta-band__inner">
+      <h2>Ready to Transform Your Surfaces?</h2>
+      <p>Get a detailed quote and expert consultation at no cost</p>
+      <a href="#" class="btn btn--white btn--lg btn--rounded-full">Request Free Estimate</a>
+      <div class="cta-features">
+        <div class="cta-feature">
+          <div class="cta-feature__icon">
+            <svg viewBox="0 0 44 44" fill="none"><circle cx="22" cy="22" r="20" fill="rgba(255,255,255,0.2)"/><circle cx="22" cy="22" r="10" stroke="white" stroke-width="2"/><path d="M22 14v8l5 3" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div class="cta-feature__text">
+            <strong>Flexible Scheduling</strong>
+            <span>Scheduled by availability</span>
+          </div>
+        </div>
+        <div class="cta-feature">
+          <div class="cta-feature__icon">
+            <svg viewBox="0 0 44 44" fill="none"><circle cx="22" cy="22" r="20" fill="rgba(255,255,255,0.2)"/><circle cx="22" cy="17" r="5" stroke="white" stroke-width="2"/><path d="M12 36c0-5 4-9 10-9s10 4 10 9" stroke="white" stroke-width="2" stroke-linecap="round"/><path d="M29 21l2 2 4-4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div class="cta-feature__text">
+            <strong>Expert Consultation</strong>
+            <span>Professional assessment of your needs</span>
+          </div>
+        </div>
+        <div class="cta-feature">
+          <div class="cta-feature__icon">
+            <svg viewBox="0 0 44 44" fill="none"><circle cx="22" cy="22" r="20" fill="rgba(255,255,255,0.2)"/><rect x="13" y="11" width="18" height="22" rx="2" stroke="white" stroke-width="2"/><line x1="17" y1="18" x2="27" y2="18" stroke="white" stroke-width="1.5" stroke-linecap="round"/><line x1="17" y1="22" x2="27" y2="22" stroke="white" stroke-width="1.5" stroke-linecap="round"/><line x1="17" y1="26" x2="22" y2="26" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </div>
+          <div class="cta-feature__text">
+            <strong>Detailed Quote</strong>
+            <span>Transparent pricing with no hidden fees</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer">
+    <div class="footer__body container">
+
+      <div class="footer__brand">
+        <a href="#" class="logo logo--footer">
+          <div class="logo__badge logo__badge--sm">
+            <svg viewBox="0 0 60 60" fill="none" aria-hidden="true">
+              <circle cx="30" cy="30" r="30" fill="#1a1a1a"/>
+              <ellipse cx="30" cy="43" rx="20" ry="3.5" stroke="#C89B4C" stroke-width="1.5" fill="none"/>
+              <circle cx="30" cy="14" r="5" fill="#C89B4C"/>
+              <path d="M24 22 Q30 18 36 22 L37 35 H23 Z" fill="#C89B4C"/>
+              <path d="M23 35 L21 46" stroke="#C89B4C" stroke-width="2.5" stroke-linecap="round"/>
+              <path d="M37 35 L39 46" stroke="#C89B4C" stroke-width="2.5" stroke-linecap="round"/>
+              <rect x="25" y="37" width="10" height="4" rx="1.5" fill="#C89B4C"/>
+              <line x1="30" y1="41" x2="30" y2="46" stroke="#C89B4C" stroke-width="2"/>
+              <ellipse cx="30" cy="47" rx="5" ry="2" fill="#C89B4C" opacity="0.6"/>
+            </svg>
+          </div>
+          <div class="logo__labels">
+            <span class="logo__name">RESTORE</span>
+            <span class="logo__tagline">— SURFACE CARE —</span>
+          </div>
+        </a>
+        <p class="footer__desc">Restore Surface Care™ provides premium stone, tile, and specialty surface restoration for residential and commercial properties across Greater Houston and surrounding areas.</p>
+      </div>
+
+      <div class="footer__col">
+        <h4 class="footer__heading">Contact</h4>
+        <ul class="footer__contacts">
+          <li>
+            <svg class="ficon" viewBox="0 0 20 20" fill="none"><path d="M3 4h3l1.5 3.5-1.5 1.5a11 11 0 005 5l1.5-1.5L17 14v3a1 1 0 01-1 1A15 15 0 012 3a1 1 0 011-1z" stroke="#C89B4C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <a href="tel:5551234567">(555) 123-4567</a>
+          </li>
+          <li>
+            <svg class="ficon" viewBox="0 0 20 20" fill="none"><path d="M3 5h14a1 1 0 011 1v8a1 1 0 01-1 1H3a1 1 0 01-1-1V6a1 1 0 011-1z" stroke="#C89B4C" stroke-width="1.5"/><path d="M2 6l8 5 8-5" stroke="#C89B4C" stroke-width="1.5" stroke-linecap="round"/></svg>
+            <a href="mailto:info@restoresurfacecare.com">info@restoresurfacecare.com</a>
+          </li>
+          <li>
+            <svg class="ficon" viewBox="0 0 20 20" fill="none"><path d="M10 2a6 6 0 016 6c0 5-6 10-6 10S4 13 4 8a6 6 0 016-6z" stroke="#C89B4C" stroke-width="1.5"/><circle cx="10" cy="8" r="2" stroke="#C89B4C" stroke-width="1.5"/></svg>
+            <span>Serving Greater Houston &amp; Surrounding Areas</span>
+          </li>
+          <li>
+            <svg class="ficon" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="#C89B4C" stroke-width="1.5"/><path d="M10 6v4l3 2" stroke="#C89B4C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Mon–Fri: 8am–5pm CST</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="footer__col">
+        <h4 class="footer__heading">Quick Links</h4>
+        <ul class="footer__links">
+          <li><a href="#">About Us</a></li>
+          <li><a href="#">Services</a></li>
+          <li><a href="#">Our Work</a></li>
+          <li><a href="#">Reviews</a></li>
+          <li><a href="#">Service Areas</a></li>
+        </ul>
+      </div>
+
+      <div class="footer__col">
+        <h4 class="footer__heading">Resources</h4>
+        <ul class="footer__links">
+          <li><a href="#">Stone Care Guides</a></li>
+          <li><a href="#">Stone Restoration Faqs</a></li>
+          <li><a href="#">Surface IQ Guide</a></li>
+          <li><a href="#">Ask-The-Expert</a></li>
+          <li><a href="#">Cleaning Products</a></li>
+        </ul>
+      </div>
+
+    </div>
+    <div class="footer__bottom">
+      <div class="container footer__bottom-inner">
+        <p>&copy; 2026 Restore Surface Care™. All rights reserved.</p>
+        <nav class="footer__legal">
+          <a href="#">Terms-Of-Use</a>
+          <a href="#">Privacy Policy</a>
+          <a href="#">Refund-Policy</a>
+          <a href="#">Ask-The-Expert</a>
+        </nav>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Mobile nav toggle
+    const navToggle = document.getElementById('navToggle');
+    const nav = document.getElementById('nav');
+    const header = document.getElementById('header');
+
+    navToggle?.addEventListener('click', () => {
+      const isOpen = nav.classList.toggle('open');
+      navToggle.classList.toggle('open', isOpen);
+      navToggle.setAttribute('aria-expanded', String(isOpen));
+    });
+
+    // Mobile accordion dropdowns
+    document.querySelectorAll('.nav__item--dropdown > a').forEach(link => {
+      link.addEventListener('click', e => {
+        if (window.innerWidth > 768) return;
+        e.preventDefault();
+        link.parentElement.classList.toggle('open');
+      });
+    });
+
+    // Close nav on outside click
+    document.addEventListener('click', e => {
+      if (!header?.contains(e.target) && nav?.classList.contains('open')) {
+        nav.classList.remove('open');
+        navToggle?.classList.remove('open');
+        navToggle?.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    // Scroll shadow on header
+    window.addEventListener('scroll', () => {
+      header?.classList.toggle('header--scrolled', window.scrollY > 10);
+    }, { passive: true });
+
+    // Play button click feedback
+    document.querySelectorAll('.play-btn, .play-btn-lg').forEach(btn => {
+      btn.addEventListener('click', () => {
+        btn.textContent = '⏸';
+        setTimeout(() => { btn.textContent = '▶'; }, 2000);
+      });
+    });
+  </script>
+</body>
+</html>
