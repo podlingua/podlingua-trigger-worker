@@ -469,6 +469,26 @@ export const podcastOrchestrator = task({
     // ── TEST MODE: Skip dubbing ───────────────────────────────────────────────
     if (testMode) {
       console.log("[TEST MODE] Skipping ElevenLabs — returning test audio URL");
+
+      // ✅ FIX: Save test audio URL back to Supabase
+      const { error: testUpdateError } = await supabase
+        .from("podcasts")
+        .update({
+          status: "completed",
+          audio_url: TEST_MODE_AUDIO_URL,
+          audio_chunks: [TEST_MODE_AUDIO_URL],
+          transcript: transcriptText,
+          translation: translationText,
+          detected_language: detectedLanguageCode,
+        })
+        .eq("id", episodeId);
+
+      if (testUpdateError) {
+        console.error("[TEST MODE] Failed to update Supabase row:", testUpdateError.message);
+      } else {
+        console.log("[TEST MODE] Supabase row updated with test audio URL");
+      }
+
       return {
         transcript: transcriptText,
         translation: translationText,
@@ -511,8 +531,6 @@ export const podcastOrchestrator = task({
     console.log("[STEP 7] All", localChunkPaths.length, "chunks dubbed");
 
     // ── STEP 8: Upload Each Chunk to Supabase ─────────────────────────────────
-    // Each chunk is small (well under 50MB) — no size limit issues
-    // Chunks stay in Supabase permanently; frontend merges them client-side on download
     console.log("[STEP 8] UPLOADING", localChunkPaths.length, "chunks to Supabase");
 
     const supabaseChunkUrls: string[] = [];
@@ -521,12 +539,33 @@ export const podcastOrchestrator = task({
       const url = await uploadChunkToSupabase(supabase, BUCKET, localChunkPaths[i], episodeId, i);
       supabaseChunkUrls.push(url);
       console.log("[STEP 8] Uploaded chunk", (i + 1) + "/" + localChunkPaths.length);
-      // Delete local temp file immediately after upload to save /tmp space
       try { unlinkSync(localChunkPaths[i]); } catch {}
     }
 
+    // ── STEP 9: Save Results to Supabase ──────────────────────────────────────
+    // ✅ FIX: This is what was missing — the pipeline never wrote results back
+    console.log("[STEP 9] SAVING RESULTS TO SUPABASE");
+
+    const { error: updateError } = await supabase
+      .from("podcasts")
+      .update({
+        status: "completed",
+        audio_url: supabaseChunkUrls[0],        // first chunk as the playable URL
+        audio_chunks: supabaseChunkUrls,         // all chunks for client-side merge
+        transcript: transcriptText,
+        translation: translationText,
+        detected_language: detectedLanguageCode,
+      })
+      .eq("id", episodeId);
+
+    if (updateError) {
+      // Don't throw — the audio is uploaded, just log the failure
+      console.error("[STEP 9] Failed to update Supabase row:", updateError.message);
+    } else {
+      console.log("[STEP 9] Supabase row updated successfully");
+    }
+
     // ── DONE ─────────────────────────────────────────────────────────────────
-    // Return all chunk URLs — frontend will fetch and concatenate into one MP3 on download
     console.log("[DONE] PIPELINE COMPLETE —", supabaseChunkUrls.length, "chunks ready");
 
     return {
@@ -534,8 +573,8 @@ export const podcastOrchestrator = task({
       translation: translationText,
       speaker_assignments: speakerToVoice,
       detected_language: detectedLanguageCode,
-      final_audio_url: supabaseChunkUrls[0], // first chunk as fallback
-      audio_chunks: supabaseChunkUrls,        // all chunks for client-side merge
+      final_audio_url: supabaseChunkUrls[0],
+      audio_chunks: supabaseChunkUrls,
     };
   },
 });
