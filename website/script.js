@@ -32,6 +32,15 @@ window.addEventListener('scroll', () => {
   header?.classList.toggle('header--scrolled', window.scrollY > 10);
 }, { passive: true });
 
+// Video thumbnail click to embed
+document.querySelectorAll('.vg-card__embed--thumb').forEach(el => {
+  el.addEventListener('click', () => {
+    const id = el.dataset.videoid;
+    el.innerHTML = `<iframe src="https://www.youtube.com/embed/${id}?autoplay=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+    el.classList.remove('vg-card__embed--thumb');
+  });
+});
+
 // Video gallery filter
 document.querySelectorAll('.vg-filter').forEach(btn => {
   btn.addEventListener('click', () => {
