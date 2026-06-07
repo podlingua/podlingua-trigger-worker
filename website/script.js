@@ -32,6 +32,18 @@ window.addEventListener('scroll', () => {
   header?.classList.toggle('header--scrolled', window.scrollY > 10);
 }, { passive: true });
 
+// Video gallery filter
+document.querySelectorAll('.vg-filter').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.vg-filter').forEach(b => b.classList.remove('vg-filter--active'));
+    btn.classList.add('vg-filter--active');
+    const filter = btn.dataset.filter;
+    document.querySelectorAll('.vg-card').forEach(card => {
+      card.classList.toggle('vg-card--hidden', filter !== 'all' && card.dataset.category !== filter);
+    });
+  });
+});
+
 // Play button click feedback (placeholder)
 document.querySelectorAll('.play-btn, .play-btn-lg').forEach(btn => {
   btn.addEventListener('click', () => {
